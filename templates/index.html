@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora de Préstamo Pro</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><i class="fas fa-calculator"></i> Calculadora de Préstamo Pro</h1>
+      </header>
+      <main>
+        <form method="POST" action="/" id="loanForm">
+          <div class="form-group">
+            <label for="principal"
+              ><i class="fas fa-dollar-sign"></i> Principal Actual:</label
+            >
+            <input
+              type="text"
+              id="principal"
+              name="principal"
+              value="{{ request.form.principal }}"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="tasa_anual"
+              ><i class="fas fa-percentage"></i> Tasa de Interés Anual:</label
+            >
+            <input
+              type="text"
+              id="tasa_anual"
+              name="tasa_anual"
+              value="{{ request.form.tasa_anual }}"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="pago_mensual_fijo"
+              ><i class="fas fa-money-bill-wave"></i> Pago Mensual Fijo:</label
+            >
+            <input
+              type="text"
+              id="pago_mensual_fijo"
+              name="pago_mensual_fijo"
+              value="{{ request.form.pago_mensual_fijo }}"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="pago_mensual_adicional"
+              ><i class="fas fa-plus-circle"></i> Pago Mensual Adicional:</label
+            >
+            <input
+              type="text"
+              id="pago_mensual_adicional"
+              name="pago_mensual_adicional"
+              value="{{ request.form.pago_mensual_adicional }}"
+              required
+            />
+          </div>
+          <div class="form-group plazo-group">
+            <label><i class="fas fa-calendar-alt"></i> Plazo Original:</label>
+            <div class="plazo-inputs">
+              <input
+                type="text"
+                id="plazo_anios"
+                name="plazo_anios"
+                value="{{ request.form.plazo_anios }}"
+                required
+                placeholder="Años"
+              />
+              <input
+                type="text"
+                id="plazo_meses"
+                name="plazo_meses"
+                value="{{ request.form.plazo_meses }}"
+                required
+                placeholder="Meses"
+              />
+            </div>
+          </div>
+          <div class="form-group button-group">
+            <button type="submit" class="btn-calculate">
+              <i class="fas fa-calculator"></i> Calcular
+            </button>
+            <button type="button" class="btn-reset" onclick="resetForm()">
+              <i class="fas fa-undo"></i> Resetear
+            </button>
+          </div>
+        </form>
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+        <div id="results" class="results-container">
+          {% if resumen %}
+          <div class="summary">
+            <h2>Resumen Final</h2>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <i class="fas fa-clock"></i>
+                <p>Tiempo Total</p>
+                <strong>{{ resumen['Tiempo Total'] }}</strong>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-coins"></i>
+                <p>Total Intereses Pagados</p>
+                <strong>{{ resumen['Total Intereses Pagados'] }}</strong>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-piggy-bank"></i>
+                <p>Total Intereses Ahorrados</p>
+                <strong>{{ resumen['Total Intereses Ahorrados'] }}</strong>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-chart-line"></i>
+                <p>Interés Diario Inicial</p>
+                <strong>{{ resumen['Interés Diario Inicial'] }}</strong>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-chart-line fa-flip-vertical"></i>
+                <p>Interés Diario Final</p>
+                <strong>{{ resumen['Interés Diario Final'] }}</strong>
+              </div>
+            </div>
+          </div>
+          {% endif %} {% if tables %}
+          <div class="payment-details">
+            <h2>Detalles de los Pagos Mensuales</h2>
+            {{ tables[0]|safe }}
+          </div>
+          {% endif %}
+        </div>
+      </main>
+    </div>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+  </body>
+</html>
