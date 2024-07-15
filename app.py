@@ -1,5 +1,8 @@
 from flask import Flask, request, render_template
 import pandas as pd
+import locale
+
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 app = Flask(__name__)
 
@@ -81,12 +84,12 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
     tiempo_total_meses = mes % 12
 
     resumen = {
-        "Tiempo Total": f"{tiempo_total_anios} años, {tiempo_total_meses} meses",
-        "Total Intereses Pagados": f"${total_intereses_pagados:.2f}",
-        "Total Intereses Ahorrados": f"${ahorro_intereses:.2f}",
-        "Interés Diario Inicial": f"${interes_diario_inicial:.2f}",
-        "Interés Diario Final": f"${interes_diario_final:.2f}"
-    }
+    "Tiempo Total": f"{tiempo_total_anios} años, {tiempo_total_meses} meses",
+    "Total Intereses Pagados": locale.currency(total_intereses_pagados, grouping=True),
+    "Total Intereses Ahorrados": locale.currency(ahorro_intereses, grouping=True),
+    "Interés Diario Inicial": locale.currency(interes_diario_inicial, grouping=True),
+    "Interés Diario Final": locale.currency(interes_diario_final, grouping=True)
+}
     
     return df, resumen
 
@@ -106,6 +109,7 @@ def index():
             return render_template("index.html", resumen=resumen_final, tables=[df_pagos.to_html(classes='data')], request=request)
         except Exception as e:
             print(f"Error: {e}")
+            app.logger.error(f"An error occurred: {str(e)}")
             return render_template("index.html", error="Hubo un error procesando tu solicitud. Por favor, verifica los datos ingresados.", request=request)
     return render_template("index.html", request=request)
 

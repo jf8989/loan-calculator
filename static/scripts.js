@@ -3,22 +3,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputs = form.querySelectorAll('input[type="text"]');
     const resultsContainer = document.getElementById('results');
 
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.style.boxShadow = '0 0 0 2px rgba(52, 152, 219, 0.5)';
+    form.addEventListener('submit', function(event) {
+        const inputs = form.querySelectorAll('input[type="text"]');
+        let isValid = true;
+        
+        inputs.forEach(input => {
+            if (input.value.trim() === '') {
+                isValid = false;
+                input.style.borderColor = 'red';
+            } else {
+                input.style.borderColor = '';
+            }
         });
-
-        input.addEventListener('blur', function() {
-            this.style.boxShadow = 'none';
-        });
+        
+        if (!isValid) {
+            event.preventDefault();
+            alert('Please fill in all fields');
+        } else {
+            resultsContainer.style.opacity = '0';
+            setTimeout(() => {
+                resultsContainer.style.opacity = '1';
+            }, 300);
+        }
     });
 
-    form.addEventListener('submit', function() {
-        resultsContainer.style.opacity = '0';
-        setTimeout(() => {
-            resultsContainer.style.opacity = '1';
-        }, 300);
+    form.addEventListener('focusin', function(event) {
+        if (event.target.tagName === 'INPUT') {
+            event.target.style.boxShadow = '0 0 0 2px rgba(52, 152, 219, 0.5)';
+        }
     });
+
+    form.addEventListener('focusout', function(event) {
+        if (event.target.tagName === 'INPUT') {
+            event.target.style.boxShadow = 'none';
+        }
+    });
+
+    // Add event listeners for currency formatting
+    document.getElementById('principal').addEventListener('blur', function() { formatCurrency(this); });
+    document.getElementById('pago_mensual_fijo').addEventListener('blur', function() { formatCurrency(this); });
+    document.getElementById('pago_mensual_adicional').addEventListener('blur', function() { formatCurrency(this); });
 });
 
 function resetForm() {
@@ -43,14 +67,12 @@ function clearResults() {
     resultsDiv.style.display = 'none';
 }
 
-// Add this function to format currency inputs
 function formatCurrency(input) {
-    let value = input.value.replace(/[^\d]/g, '');
-    value = (parseInt(value, 10) / 100).toFixed(2);
-    input.value = '$' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    let value = input.value.replace(/[^\d.]/g, '');
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+    });
+    input.value = formatter.format(value);
 }
-
-// Add event listeners for currency formatting
-document.getElementById('principal').addEventListener('blur', function() { formatCurrency(this); });
-document.getElementById('pago_mensual_fijo').addEventListener('blur', function() { formatCurrency(this); });
-document.getElementById('pago_mensual_adicional').addEventListener('blur', function() { formatCurrency(this); });
