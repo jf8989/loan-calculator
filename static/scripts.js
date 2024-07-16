@@ -165,23 +165,32 @@ function setupInputMasks() {
     currencyInputs.forEach(id => {
         const input = document.getElementById(id);
         input.addEventListener('input', function(e) {
-            // Allow digits and one decimal point
             let value = e.target.value.replace(/[^\d.]/g, '');
             
-            // Ensure only one decimal point
-            let parts = value.split('.');
-            if (parts.length > 2) {
-                parts = [parts[0], parts.slice(1).join('')];
+            // Allow only one decimal point
+            const decimalIndex = value.indexOf('.');
+            if (decimalIndex !== -1) {
+                const integerPart = value.slice(0, decimalIndex);
+                let decimalPart = value.slice(decimalIndex + 1);
+                // Limit decimal part to two digits
+                decimalPart = decimalPart.slice(0, 2);
+                value = integerPart + '.' + decimalPart;
             }
-            value = parts.join('.');
 
-            if (value) {
-                // Format the number with commas for thousands
-                let [integerPart, decimalPart] = value.split('.');
-                integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                e.target.value = '$' + integerPart + (decimalPart ? '.' + decimalPart : '');
-            } else {
-                e.target.value = '';
+            // Format the number
+            const parts = value.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            
+            e.target.value = '$' + parts.join('.');
+        });
+
+        // Ensure correct formatting on blur
+        input.addEventListener('blur', function() {
+            if (input.value) {
+                const numValue = parseFloat(input.value.replace(/[^\d.]/g, ''));
+                if (!isNaN(numValue)) {
+                    input.value = '$' + numValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }
             }
         });
     });

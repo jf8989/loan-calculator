@@ -1,0 +1,4 @@
+D:
+cd "D:\00 Python Projects\Loan Calculator\loan-calculator"
+
+vercel --prod
