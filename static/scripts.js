@@ -209,7 +209,8 @@ function setupInputMasks() {
     });
   });
 
-  const percentInput = document.getElementById("tasa_anual");
+  // Add percentage formatting
+  const percentInput = document.getElementById("tasa_anual");  
   percentInput.addEventListener("input", function (e) {
     let value = e.target.value.replace(/[^\d.]/g, "");
     if (value) {
