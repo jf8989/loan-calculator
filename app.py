@@ -1,6 +1,5 @@
 from flask import Flask, request, render_template
 import pandas as pd
-import locale
 import logging
 
 app = Flask(__name__)
@@ -52,13 +51,13 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
 
             pagos.append((
                 mes,
-                locale.currency(pago_total, grouping=True),
-                locale.currency(interes_mes, grouping=True),
-                locale.currency(pago_principal, grouping=True),
-                locale.currency(saldo_restante, grouping=True)
+                f"${pago_total:,.2f}",
+                f"${interes_mes:,.2f}",
+                f"${pago_principal:,.2f}",
+                f"${saldo_restante:,.2f}"
             ))
 
-            logging.debug(f"Month {mes}: Pago Total = {locale.currency(pago_total, grouping=True)}, Interes Mes = {locale.currency(interes_mes, grouping=True)}, Pago Principal = {locale.currency(pago_principal, grouping=True)}, Saldo Restante = {locale.currency(saldo_restante, grouping=True)}")
+            logging.debug(f"Month {mes}: Pago Total = ${pago_total:,.2f}, Interes Mes = ${interes_mes:,.2f}, Pago Principal = ${pago_principal:,.2f}, Saldo Restante = ${saldo_restante:,.2f}")
 
             if saldo_restante == 0:
                 break
@@ -66,7 +65,7 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
         # Provide feedback about extra interest paid if no additional payments
         if pago_mensual_adicional == 0 and round(total_intereses_pagados, 2) != round(interes_original, 2):
             extra_interest = total_intereses_pagados - interes_original
-            feedback = f"Due to the fixed monthly payment, you will end up paying an additional {locale.currency(extra_interest, grouping=True)} in interest."
+            feedback = f"Due to the fixed monthly payment, you will end up paying an additional ${extra_interest:,.2f} in interest."
         else:
             feedback = ""
 
@@ -75,11 +74,11 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
 
         resumen = {
             "Tiempo Total": f"{mes // 12} años, {mes % 12} meses ({mes} meses en total)",
-            "Total Intereses Pagados": locale.currency(total_intereses_pagados, grouping=True),
-            "Total Intereses Ahorrados": locale.currency(ahorro_intereses, grouping=True),
-            "Interés Diario Inicial": locale.currency(principal * tasa_diaria, grouping=True),
-            "Interés Diario Final": locale.currency(saldo_restante * tasa_diaria, grouping=True),
-            "Interés Original Sin Pagos Adicionales": locale.currency(interes_original, grouping=True),
+            "Total Intereses Pagados": f"${total_intereses_pagados:,.2f}",
+            "Total Intereses Ahorrados": f"${ahorro_intereses:,.2f}",
+            "Interés Diario Inicial": f"${principal * tasa_diaria:,.2f}",
+            "Interés Diario Final": f"${saldo_restante * tasa_diaria:,.2f}",
+            "Interés Original Sin Pagos Adicionales": f"${interes_original:,.2f}",
             "Feedback": feedback
         }
 
