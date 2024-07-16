@@ -3,8 +3,6 @@ import pandas as pd
 import locale
 import logging
 
-locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-
 app = Flask(__name__)
 
 # Set up logging
