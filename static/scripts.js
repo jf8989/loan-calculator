@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!isValid) {
             event.preventDefault();
-            alert('Please fill in all fields');
+            alert('Por favor, complete todos los campos');
         } else {
             resultsContainer.style.opacity = '0';
             setTimeout(() => {
@@ -58,6 +58,7 @@ function resetForm() {
         setTimeout(() => {
             input.style.backgroundColor = 'white';
         }, 500);
+        input.style.borderColor = ''; // Reset border color
     });
 }
 
@@ -75,4 +76,11 @@ function formatCurrency(input) {
         minimumFractionDigits: 2
     });
     input.value = formatter.format(value);
+}
+
+// Function to update summary text
+function updateSummaryText(principal, tasaAnual, pagoMensualFijo, pagoMensualAdicional) {
+    const summaryText = document.getElementById('summary-text');
+    const currentDate = new Date().toLocaleDateString('es-ES');
+    summaryText.textContent = `Para pagar un préstamo cuyo principal a la fecha actual, ${currentDate}, con una tasa de interés del ${tasaAnual}% anual, pagando de manera fija $${pagoMensualFijo} al mes y aplicando un pago adicional mensual de $${pagoMensualAdicional}:`;
 }

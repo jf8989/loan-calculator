@@ -6,106 +6,112 @@
     <title>Calculadora de Préstamo Pro</title>
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='styles.css') }}"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
     />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      href="{{ url_for('static', filename='styles.css') }}"
     />
+    <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
   </head>
   <body>
     <div class="container">
       <header>
-        <h1><i class="fas fa-calculator"></i> Calculadora de Préstamo Pro</h1>
+        <h1>Calculadora de Préstamo Pro</h1>
       </header>
+
       <main>
-        <form method="POST" action="/" id="loanForm">
+        <form id="loanForm" method="POST">
           <div class="form-group">
-            <label for="principal"
-              ><i class="fas fa-dollar-sign"></i> Principal Actual:</label
-            >
+            <label for="principal">Principal Actual:</label>
             <input
               type="text"
               id="principal"
               name="principal"
-              value="{{ request.form.principal }}"
+              value="{{ form_data.principal }}"
               required
-              aria-label="Principal Actual"
+              title="El monto actual que debes del préstamo"
             />
           </div>
+
           <div class="form-group">
-            <label for="tasa_anual"
-              ><i class="fas fa-percentage"></i> Tasa de Interés Anual:</label
-            >
+            <label for="tasa_anual">Tasa de Interés Anual:</label>
             <input
               type="text"
               id="tasa_anual"
               name="tasa_anual"
-              value="{{ request.form.tasa_anual }}"
+              value="{{ form_data.tasa_anual }}"
               required
+              title="La tasa de interés anual del préstamo"
             />
           </div>
+
           <div class="form-group">
-            <label for="pago_mensual_fijo"
-              ><i class="fas fa-money-bill-wave"></i> Pago Mensual Fijo:</label
-            >
+            <label for="pago_mensual_fijo">Pago Mensual Fijo:</label>
             <input
               type="text"
               id="pago_mensual_fijo"
               name="pago_mensual_fijo"
-              value="{{ request.form.pago_mensual_fijo }}"
+              value="{{ form_data.pago_mensual_fijo }}"
               required
+              title="El pago mensual que estás obligado a hacer"
             />
           </div>
+
           <div class="form-group">
-            <label for="pago_mensual_adicional"
-              ><i class="fas fa-plus-circle"></i> Pago Mensual Adicional:</label
-            >
+            <label for="pago_mensual_adicional">Pago Mensual Adicional:</label>
             <input
               type="text"
               id="pago_mensual_adicional"
               name="pago_mensual_adicional"
-              value="{{ request.form.pago_mensual_adicional }}"
+              value="{{ form_data.pago_mensual_adicional }}"
               required
+              title="Cualquier pago adicional que desees hacer cada mes"
             />
           </div>
+
           <div class="form-group plazo-group">
-            <label><i class="fas fa-calendar-alt"></i> Plazo Original:</label>
+            <label for="plazo_anios">Plazo Restante del Préstamo:</label>
             <div class="plazo-inputs">
               <input
                 type="text"
                 id="plazo_anios"
                 name="plazo_anios"
-                value="{{ request.form.plazo_anios }}"
+                value="{{ form_data.plazo_anios }}"
                 required
-                placeholder="Años"
+                title="Años restantes del préstamo"
               />
               <input
                 type="text"
                 id="plazo_meses"
                 name="plazo_meses"
-                value="{{ request.form.plazo_meses }}"
+                value="{{ form_data.plazo_meses }}"
                 required
-                placeholder="Meses"
+                title="Meses adicionales restantes del préstamo"
               />
             </div>
           </div>
+
           <div class="form-group button-group">
-            <button type="submit" class="btn-calculate">
-              <i class="fas fa-calculator"></i> Calcular
-            </button>
+            <button type="submit" class="btn-calculate">Calcular</button>
             <button type="button" class="btn-reset" onclick="resetForm()">
-              <i class="fas fa-undo"></i> Resetear
+              Resetear
             </button>
           </div>
         </form>
+
         {% if error %}
         <div class="error-message">{{ error }}</div>
         {% endif %}
-        <div id="results" class="results-container">
+
+        <div
+          id="results"
+          class="results-container {% if not resumen %}hidden{% endif %}"
+        >
           {% if resumen %}
           <div class="summary">
             <h2>Resumen Final</h2>
+            <p id="summary-text"></p>
             <div class="summary-grid">
               <div class="summary-item">
                 <i class="fas fa-clock"></i>
@@ -113,7 +119,7 @@
                 <strong>{{ resumen['Tiempo Total'] }}</strong>
               </div>
               <div class="summary-item">
-                <i class="fas fa-coins"></i>
+                <i class="fas fa-money-bill-wave"></i>
                 <p>Total Intereses Pagados</p>
                 <strong>{{ resumen['Total Intereses Pagados'] }}</strong>
               </div>
@@ -128,13 +134,19 @@
                 <strong>{{ resumen['Interés Diario Inicial'] }}</strong>
               </div>
               <div class="summary-item">
-                <i class="fas fa-chart-line fa-flip-vertical"></i>
+                <i class="fas fa-chart-line"></i>
                 <p>Interés Diario Final</p>
                 <strong>{{ resumen['Interés Diario Final'] }}</strong>
               </div>
+              <div class="summary-item">
+                <i class="fas fa-hand-holding-usd"></i>
+                <p>Interés Original Sin Pagos Adicionales</p>
+                <strong>{{ resumen['Interés Original Sin Pagos Adicionales'] }}</strong>
+              </div>
             </div>
           </div>
-          {% endif %} {% if tables %}
+          {% endif %}
+          {% if tables %}
           <div class="payment-details">
             <h2>Detalles de los Pagos Mensuales</h2>
             {{ tables[0]|safe }}
@@ -143,6 +155,5 @@
         </div>
       </main>
     </div>
-    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
   </body>
 </html>

@@ -1,117 +1,134 @@
 from flask import Flask, request, render_template
 import pandas as pd
 import locale
+import logging
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 app = Flask(__name__)
 
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+
 def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adicional, plazo_anios, plazo_meses):
-    # Convertir las entradas a tipos numéricos
-    principal = float(principal.replace('$', '').replace(',', ''))
-    tasa_anual = float(tasa_anual.replace('%', ''))
-    pago_mensual_fijo = float(pago_mensual_fijo.replace('$', '').replace(',', ''))
-    pago_mensual_adicional = float(pago_mensual_adicional.replace('$', '').replace(',', ''))
-    plazo_anios = int(plazo_anios)
-    plazo_meses = int(plazo_meses)
+    try:
+        # Convert inputs to appropriate types
+        principal = float(principal.replace('$', '').replace(',', ''))
+        tasa_anual = float(tasa_anual.replace('%', ''))
+        pago_mensual_fijo = float(pago_mensual_fijo.replace('$', '').replace(',', ''))
+        pago_mensual_adicional = float(pago_mensual_adicional.replace('$', '').replace(',', ''))
+        plazo_total_meses = int(plazo_anios) * 12 + int(plazo_meses)
 
-    # Calcular el pago mensual total
-    pago_mensual_total = pago_mensual_fijo + pago_mensual_adicional
-    
-    # Calcular la tasa de interés mensual
-    tasa_mensual = tasa_anual / 12 / 100
-    
-    # Calcular la tasa de interés diaria (aproximadamente)
-    tasa_diaria = tasa_anual / 365 / 100
-    
-    # Lista para almacenar los resultados mensuales
-    pagos = []
-    
-    # Inicializar variables
-    mes = 0
-    total_intereses_pagados = 0
-    interes_diario_inicial = principal * tasa_diaria
-    interes_diario_final = 0
-    
-    # Realizar los cálculos mensuales hasta que el préstamo esté pagado
-    while principal > 0:
-        mes += 1
-        # Calcular el interés del mes actual
-        pago_interes = principal * tasa_mensual
-        pago_principal = pago_mensual_total - pago_interes
-        
-        # Asegurarse de no pagar más del saldo restante
-        if pago_principal > principal:
-            pago_principal = principal
-            pago_mensual_total = pago_principal + pago_interes
+        # Calculate monthly interest rate
+        tasa_mensual = tasa_anual / 12 / 100
 
-        # Reducir el principal
-        principal -= pago_principal
-        total_intereses_pagados += pago_interes
-        
-        # Actualizar el interés diario final
-        interes_diario_final = principal * tasa_diaria
+        # Calculate daily interest rate (not used in this calculation but kept for completeness)
+        tasa_diaria = tasa_anual / 365 / 100
 
-        # Guardar los resultados del mes
-        pagos.append((
-            mes,
-            f"${pago_mensual_total:.2f}",
-            f"${pago_interes:.2f}",
-            f"${pago_principal:.2f}",
-            f"${principal:.2f}"
-        ))
-    
-    # Convertir los resultados a un DataFrame de pandas para facilitar la visualización
-    df = pd.DataFrame(pagos, columns=["Mes", "Pago Mensual Total", "Pago Intereses", "Pago Principal", "Principal Restante"])
+        # Calculate original interest if no additional payments are made
+        total_pagos_original = pago_mensual_fijo * plazo_total_meses
+        interes_original = total_pagos_original - principal
 
-    # Calcular el interés a pagar si se espera hasta el final del plazo original
-    plazo_total_meses = plazo_anios * 12 + plazo_meses
-    principal_original = principal + sum([float(pago[3].replace('$','')) for pago in pagos])
-    pago_mensual_original = principal_original * tasa_mensual / (1 - (1 + tasa_mensual) ** -plazo_total_meses)
-    interes_a_pagar_si_se_espera = 0
-    principal_temp = principal_original
+        pagos = []
+        total_intereses_pagados = 0
+        mes = 0
+        saldo_restante = principal
 
-    for _ in range(plazo_total_meses):
-        pago_interes_temp = principal_temp * tasa_mensual
-        pago_principal_temp = pago_mensual_original - pago_interes_temp
-        principal_temp -= pago_principal_temp
-        interes_a_pagar_si_se_espera += pago_interes_temp
+        while saldo_restante > 0 and mes < plazo_total_meses:
+            mes += 1
+            interes_mes = saldo_restante * tasa_mensual
+            pago_total = pago_mensual_fijo + pago_mensual_adicional
 
-    ahorro_intereses = interes_a_pagar_si_se_espera - total_intereses_pagados
+            if saldo_restante + interes_mes < pago_total:
+                # Pay the remaining balance with interest, adjust for last month with additional payments
+                if pago_mensual_adicional > 0:
+                    pago_total = saldo_restante + interes_mes
+                pago_principal = saldo_restante
+                interes_mes = pago_total - pago_principal  # Adjust interest to match the final payment
+                saldo_restante = 0
+            else:
+                pago_principal = pago_total - interes_mes
+                saldo_restante -= pago_principal
 
-    # Calcular el tiempo total en años y meses
-    tiempo_total_anios = mes // 12
-    tiempo_total_meses = mes % 12
+            total_intereses_pagados += interes_mes
 
-    resumen = {
-    "Tiempo Total": f"{tiempo_total_anios} años, {tiempo_total_meses} meses",
-    "Total Intereses Pagados": locale.currency(total_intereses_pagados, grouping=True),
-    "Total Intereses Ahorrados": locale.currency(ahorro_intereses, grouping=True),
-    "Interés Diario Inicial": locale.currency(interes_diario_inicial, grouping=True),
-    "Interés Diario Final": locale.currency(interes_diario_final, grouping=True)
-}
-    
-    return df, resumen
+            pagos.append((
+                mes,
+                f"${pago_total:.2f}",
+                f"${interes_mes:.2f}",
+                f"${pago_principal:.2f}",
+                f"${saldo_restante:.2f}"
+            ))
+
+            logging.debug(f"Month {mes}: Pago Total = ${pago_total:.2f}, Interes Mes = ${interes_mes:.2f}, Pago Principal = ${pago_principal:.2f}, Saldo Restante = ${saldo_restante:.2f}")
+
+            if saldo_restante == 0:
+                break
+
+        # Provide feedback about extra interest paid if no additional payments
+        if pago_mensual_adicional == 0 and round(total_intereses_pagados, 2) != round(interes_original, 2):
+            extra_interest = total_intereses_pagados - interes_original
+            feedback = f"Due to the fixed monthly payment, you will end up paying an additional ${extra_interest:.2f} in interest."
+        else:
+            feedback = ""
+
+        # Calculate interest savings only if there are additional payments
+        ahorro_intereses = interes_original - total_intereses_pagados if pago_mensual_adicional > 0 else 0
+
+        resumen = {
+            "Tiempo Total": f"{mes // 12} años, {mes % 12} meses ({mes} meses en total)",
+            "Total Intereses Pagados": locale.currency(total_intereses_pagados, grouping=True),
+            "Total Intereses Ahorrados": locale.currency(ahorro_intereses, grouping=True),
+            "Interés Diario Inicial": locale.currency(principal * tasa_diaria, grouping=True),
+            "Interés Diario Final": locale.currency(saldo_restante * tasa_diaria, grouping=True),
+            "Interés Original Sin Pagos Adicionales": locale.currency(interes_original, grouping=True),
+            "Feedback": feedback
+        }
+
+        return pd.DataFrame(pagos, columns=["Mes", "Pago Mensual Total", "Pago Intereses", "Pago Principal", "Principal Restante"]), resumen
+
+    except Exception as e:
+        app.logger.error(f"Error en el cálculo del préstamo: {str(e)}")
+        raise ValueError(f"Error en el cálculo: {str(e)}")
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    form_data = {
+        "principal": "",
+        "tasa_anual": "",
+        "pago_mensual_fijo": "",
+        "pago_mensual_adicional": "",
+        "plazo_anios": "",
+        "plazo_meses": ""
+    }
+    
     if request.method == "POST":
         try:
-            principal = request.form["principal"]
-            tasa_anual = request.form["tasa_anual"]
-            pago_mensual_fijo = request.form["pago_mensual_fijo"]
-            pago_mensual_adicional = request.form["pago_mensual_adicional"]
-            plazo_anios = request.form["plazo_anios"]
-            plazo_meses = request.form["plazo_meses"]
+            form_data = {
+                "principal": request.form["principal"],
+                "tasa_anual": request.form["tasa_anual"],
+                "pago_mensual_fijo": request.form["pago_mensual_fijo"],
+                "pago_mensual_adicional": request.form["pago_mensual_adicional"],
+                "plazo_anios": request.form["plazo_anios"],
+                "plazo_meses": request.form["plazo_meses"]
+            }
 
-            df_pagos, resumen_final = calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adicional, plazo_anios, plazo_meses)
+            df_pagos, resumen_final = calcular_prestamo(
+                form_data["principal"], 
+                form_data["tasa_anual"], 
+                form_data["pago_mensual_fijo"], 
+                form_data["pago_mensual_adicional"], 
+                form_data["plazo_anios"], 
+                form_data["plazo_meses"]
+            )
 
-            return render_template("index.html", resumen=resumen_final, tables=[df_pagos.to_html(classes='data')], request=request)
+            return render_template("index.html", resumen=resumen_final, tables=[df_pagos.to_html(classes='data')], form_data=form_data)
+        except ValueError as e:
+            return render_template("index.html", error=str(e), form_data=form_data)
         except Exception as e:
-            print(f"Error: {e}")
-            app.logger.error(f"An error occurred: {str(e)}")
-            return render_template("index.html", error="Hubo un error procesando tu solicitud. Por favor, verifica los datos ingresados.", request=request)
-    return render_template("index.html", request=request)
+            app.logger.error(f"Error inesperado: {str(e)}")
+            return render_template("index.html", error="Ocurrió un error inesperado. Por favor, intente nuevamente.", form_data=form_data)
+    return render_template("index.html", form_data=form_data)
 
 if __name__ == "__main__":
     app.run(debug=True)

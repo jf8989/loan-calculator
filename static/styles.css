@@ -48,6 +48,7 @@ form {
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
 }
 
 label {
@@ -114,6 +115,10 @@ button {
     margin-top: 30px;
 }
 
+.hidden {
+    display: none;
+}
+
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -149,6 +154,12 @@ button {
     color: var(--secondary-color);
 }
 
+#summary-text {
+    margin-bottom: 20px;
+    font-style: italic;
+    color: var(--text-color);
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -168,6 +179,15 @@ th {
 
 tr:nth-child(even) {
     background-color: #f8f9fa;
+}
+
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #ef9a9a;
 }
 
 @media (max-width: 768px) {
@@ -221,13 +241,4 @@ tr:nth-child(even) {
         content: attr(data-label);
         font-weight: bold;
     }
-}
-
-.error-message {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    border: 1px solid #ef9a9a;
 }
