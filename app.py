@@ -54,13 +54,13 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
 
             pagos.append((
                 mes,
-                f"${pago_total:.2f}",
-                f"${interes_mes:.2f}",
-                f"${pago_principal:.2f}",
-                f"${saldo_restante:.2f}"
+                locale.currency(pago_total, grouping=True),
+                locale.currency(interes_mes, grouping=True),
+                locale.currency(pago_principal, grouping=True),
+                locale.currency(saldo_restante, grouping=True)
             ))
 
-            logging.debug(f"Month {mes}: Pago Total = ${pago_total:.2f}, Interes Mes = ${interes_mes:.2f}, Pago Principal = ${pago_principal:.2f}, Saldo Restante = ${saldo_restante:.2f}")
+            logging.debug(f"Month {mes}: Pago Total = {locale.currency(pago_total, grouping=True)}, Interes Mes = {locale.currency(interes_mes, grouping=True)}, Pago Principal = {locale.currency(pago_principal, grouping=True)}, Saldo Restante = {locale.currency(saldo_restante, grouping=True)}")
 
             if saldo_restante == 0:
                 break
@@ -68,7 +68,7 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
         # Provide feedback about extra interest paid if no additional payments
         if pago_mensual_adicional == 0 and round(total_intereses_pagados, 2) != round(interes_original, 2):
             extra_interest = total_intereses_pagados - interes_original
-            feedback = f"Due to the fixed monthly payment, you will end up paying an additional ${extra_interest:.2f} in interest."
+            feedback = f"Due to the fixed monthly payment, you will end up paying an additional {locale.currency(extra_interest, grouping=True)} in interest."
         else:
             feedback = ""
 
@@ -122,7 +122,21 @@ def index():
                 form_data["plazo_meses"]
             )
 
-            return render_template("index.html", resumen=resumen_final, tables=[df_pagos.to_html(classes='data')], form_data=form_data)
+            # Generate responsive HTML table
+            table_html = '<table class="responsive-table">'
+            table_html += '<thead><tr>'
+            for col in df_pagos.columns:
+                table_html += f'<th>{col}</th>'
+            table_html += '</tr></thead>'
+            table_html += '<tbody>'
+            for _, row in df_pagos.iterrows():
+                table_html += '<tr>'
+                for i, value in enumerate(row):
+                    table_html += f'<td data-label="{df_pagos.columns[i]}">{value}</td>'
+                table_html += '</tr>'
+            table_html += '</tbody></table>'
+
+            return render_template("index.html", resumen=resumen_final, tables=[table_html], form_data=form_data)
         except ValueError as e:
             return render_template("index.html", error=str(e), form_data=form_data)
         except Exception as e:

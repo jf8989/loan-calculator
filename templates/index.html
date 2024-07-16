@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Calculadora de Préstamo Pro</title>
+    <title>Calculadora de Préstamo Pro by JFMA (JF8989 on GitHub)</title>
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <link
       rel="stylesheet"
@@ -18,11 +18,12 @@
     <div class="container">
       <header>
         <h1>Calculadora de Préstamo Pro</h1>
+        <p class="author">Creado por JFMA (JF8989 on GitHub)</p>
       </header>
 
       <main>
         <form id="loanForm" method="POST">
-          <div class="form-group">
+          <div class="form-group tooltip">
             <label for="principal">Principal Actual:</label>
             <input
               type="text"
@@ -30,11 +31,14 @@
               name="principal"
               value="{{ form_data.principal }}"
               required
-              title="El monto actual que debes del préstamo"
             />
+            <i class="fas fa-dollar-sign input-icon"></i>
+            <span class="tooltiptext"
+              >El monto actual que debes del préstamo</span
+            >
           </div>
 
-          <div class="form-group">
+          <div class="form-group tooltip">
             <label for="tasa_anual">Tasa de Interés Anual:</label>
             <input
               type="text"
@@ -42,11 +46,14 @@
               name="tasa_anual"
               value="{{ form_data.tasa_anual }}"
               required
-              title="La tasa de interés anual del préstamo"
             />
+            <i class="fas fa-percent input-icon"></i>
+            <span class="tooltiptext"
+              >La tasa de interés anual del préstamo</span
+            >
           </div>
 
-          <div class="form-group">
+          <div class="form-group tooltip">
             <label for="pago_mensual_fijo">Pago Mensual Fijo:</label>
             <input
               type="text"
@@ -54,11 +61,14 @@
               name="pago_mensual_fijo"
               value="{{ form_data.pago_mensual_fijo }}"
               required
-              title="El pago mensual que estás obligado a hacer"
             />
+            <i class="fas fa-money-bill-wave input-icon"></i>
+            <span class="tooltiptext"
+              >El pago mensual que estás obligado a hacer</span
+            >
           </div>
 
-          <div class="form-group">
+          <div class="form-group tooltip">
             <label for="pago_mensual_adicional">Pago Mensual Adicional:</label>
             <input
               type="text"
@@ -66,11 +76,14 @@
               name="pago_mensual_adicional"
               value="{{ form_data.pago_mensual_adicional }}"
               required
-              title="Cualquier pago adicional que desees hacer cada mes"
             />
+            <i class="fas fa-plus-circle input-icon"></i>
+            <span class="tooltiptext"
+              >Cualquier pago adicional que desees hacer cada mes</span
+            >
           </div>
 
-          <div class="form-group plazo-group">
+          <div class="form-group plazo-group tooltip">
             <label for="plazo_anios">Plazo Restante del Préstamo:</label>
             <div class="plazo-inputs">
               <input
@@ -79,7 +92,7 @@
                 name="plazo_anios"
                 value="{{ form_data.plazo_anios }}"
                 required
-                title="Años restantes del préstamo"
+                placeholder="Años"
               />
               <input
                 type="text"
@@ -87,9 +100,13 @@
                 name="plazo_meses"
                 value="{{ form_data.plazo_meses }}"
                 required
-                title="Meses adicionales restantes del préstamo"
+                placeholder="Meses"
               />
             </div>
+            <i class="fas fa-calendar-alt input-icon"></i>
+            <span class="tooltiptext"
+              >Tiempo restante del préstamo (años y meses)</span
+            >
           </div>
 
           <div class="form-group button-group">
@@ -119,6 +136,14 @@
                 <strong>{{ resumen['Tiempo Total'] }}</strong>
               </div>
               <div class="summary-item">
+                <i class="fas fa-hand-holding-usd"></i>
+                <p>Interés Original Sin Pagos Adicionales</p>
+                <strong
+                  >{{ resumen['Interés Original Sin Pagos Adicionales']
+                  }}</strong
+                >
+              </div>
+              <div class="summary-item">
                 <i class="fas fa-money-bill-wave"></i>
                 <p>Total Intereses Pagados</p>
                 <strong>{{ resumen['Total Intereses Pagados'] }}</strong>
@@ -138,22 +163,42 @@
                 <p>Interés Diario Final</p>
                 <strong>{{ resumen['Interés Diario Final'] }}</strong>
               </div>
-              <div class="summary-item">
-                <i class="fas fa-hand-holding-usd"></i>
-                <p>Interés Original Sin Pagos Adicionales</p>
-                <strong>{{ resumen['Interés Original Sin Pagos Adicionales'] }}</strong>
-              </div>
             </div>
           </div>
-          {% endif %}
-          {% if tables %}
+          {% endif %} {% if tables %}
           <div class="payment-details">
             <h2>Detalles de los Pagos Mensuales</h2>
-            {{ tables[0]|safe }}
+            <div class="table-responsive">{{ tables[0]|safe }}</div>
           </div>
           {% endif %}
         </div>
       </main>
     </div>
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-section about">
+          <h3>Sobre la Calculadora de Préstamo Pro</h3>
+          <p>Una herramienta avanzada para calcular y analizar préstamos, desarrollada con precisión y cuidado por JFMA.</p>
+        </div>
+        <div class="footer-section contact">
+          <h3>Contacto</h3>
+          <p><i class="fas fa-envelope"></i> contacto@jfma.com</p>
+          <p><i class="fas fa-phone"></i> +1 (123) 456-7890</p>
+        </div>
+        <div class="footer-section social">
+          <h3>Síguenos</h3>
+          <a href="#" class="social-icon"><i class="fab fa-linkedin"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="copyright">
+          © 2024 JFMA. Todos los derechos reservados. Este software y su código fuente están protegidos por leyes de derechos de autor. 
+          No se otorga ninguna licencia para su uso, modificación o distribución sin el permiso expreso por escrito del autor.
+        </p>
+      </div>
+    </footer>
   </body>
 </html>
