@@ -57,7 +57,7 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
         # Calculate monthly interest rate
         tasa_mensual = tasa_anual / 12 / 100
 
-        # Calculate daily interest rate (not used in this calculation but kept for completeness)
+        # Calculate daily interest rate
         tasa_diaria = tasa_anual / 365 / 100
 
         # Calculate original interest if no additional payments are made
@@ -75,11 +75,10 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
             pago_total = pago_mensual_fijo + pago_mensual_adicional
 
             if saldo_restante + interes_mes < pago_total:
-                # Pay the remaining balance with interest, adjust for last month with additional payments
                 if pago_mensual_adicional > 0:
                     pago_total = saldo_restante + interes_mes
                 pago_principal = saldo_restante
-                interes_mes = pago_total - pago_principal  # Adjust interest to match the final payment
+                interes_mes = pago_total - pago_principal
                 saldo_restante = 0
             else:
                 pago_principal = pago_total - interes_mes
@@ -95,46 +94,44 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
                 f"${saldo_restante:,.2f}"
             ))
 
-            logging.debug(f"Month {mes}: Pago Total = ${pago_total:,.2f}, Interes Mes = ${interes_mes:,.2f}, Pago Principal = ${pago_principal:,.2f}, Saldo Restante = ${saldo_restante:,.2f}")
-
             if saldo_restante == 0:
                 break
 
-        # Provide feedback about extra interest paid if no additional payments
-        if pago_mensual_adicional == 0 and round(total_intereses_pagados, 2) != round(interes_original, 2):
-            extra_interest = total_intereses_pagados - interes_original
-            feedback = f"Due to the fixed monthly payment, you will end up paying an additional ${extra_interest:,.2f} in interest."
-        else:
-            feedback = ""
-
-        # Calculate interest savings only if there are additional payments
+        # Calculate interest savings
         ahorro_intereses = interes_original - total_intereses_pagados if pago_mensual_adicional > 0 else 0
 
         resumen = {
-            "Tiempo Total": f"{mes // 12} años, {mes % 12} meses ({mes} meses en total)",
-            "Total Intereses Pagados": f"${total_intereses_pagados:,.2f}",
-            "Total Intereses Ahorrados": f"${ahorro_intereses:,.2f}",
-            "Interés Diario Inicial": f"${principal * tasa_diaria:,.2f}",
-            "Interés Diario Final": f"${saldo_restante * tasa_diaria:,.2f}",
-            "Interés Original Sin Pagos Adicionales": f"${interes_original:,.2f}",
-            "Feedback": feedback
+            translations[lang]['Total Time']: f"{mes // 12} {translations[lang]['years']}, {mes % 12} {translations[lang]['months']} ({mes} {translations[lang]['months in total']})",
+            translations[lang]['Total Interest Paid']: f"${total_intereses_pagados:,.2f}",
+            translations[lang]['Total Interest Saved']: f"${ahorro_intereses:,.2f}",
+            translations[lang]['Initial Daily Interest']: f"${principal * tasa_diaria:,.2f}",
+            translations[lang]['Final Daily Interest']: f"${saldo_restante * tasa_diaria:,.2f}",
+            translations[lang]['Original Interest Without Additional Payments']: f"${interes_original:,.2f}",
         }
 
-        return pd.DataFrame(pagos, columns=["Mes", "Pago Mensual Total", "Pago Intereses", "Pago Principal", "Principal Restante"]), resumen
+        df_pagos = pd.DataFrame(pagos, columns=[
+            translations[lang]['Month'],
+            translations[lang]['Total Monthly Payment'],
+            translations[lang]['Interest Payment'],
+            translations[lang]['Principal Payment'],
+            translations[lang]['Remaining Principal']
+        ])
+
+        return df_pagos, resumen
 
     except Exception as e:
-        app.logger.error(f"Error en el cálculo del préstamo: {str(e)}")
-        raise ValueError(f"Error en el cálculo: {str(e)}")
+        app.logger.error(f"Error in loan calculation: {str(e)}")
+        raise ValueError(f"Error in calculation: {str(e)}")
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    return handle_request('index.html')
+    return handle_request('index.html', 'es')
 
 @app.route("/en", methods=["GET", "POST"])
 def index_en():
-    return handle_request('index_en.html')
+    return handle_request('index_en.html', 'en')
 
-def handle_request(template):
+def handle_request(template, lang):
     form_data = {
         "principal": "",
         "tasa_anual": "",
@@ -161,7 +158,8 @@ def handle_request(template):
                 form_data["pago_mensual_fijo"], 
                 form_data["pago_mensual_adicional"], 
                 form_data["plazo_anios"], 
-                form_data["plazo_meses"]
+                form_data["plazo_meses"],
+                lang
             )
 
             # Generate responsive HTML table
@@ -178,13 +176,14 @@ def handle_request(template):
                 table_html += '</tr>'
             table_html += '</tbody></table>'
 
-            return render_template(template, resumen=resumen_final, tables=[table_html], form_data=form_data)
+            return render_template(template, resumen=resumen_final, tables=[table_html], form_data=form_data, translations=translations[lang])
         except ValueError as e:
-            return render_template(template, error=str(e), form_data=form_data)
+            return render_template(template, error=str(e), form_data=form_data, translations=translations[lang])
         except Exception as e:
-            app.logger.error(f"Error inesperado: {str(e)}")
-            return render_template(template, error="An unexpected error occurred. Please try again.", form_data=form_data)
-    return render_template(template, form_data=form_data)
+            app.logger.error(f"Unexpected error: {str(e)}")
+            return render_template(template, error="An unexpected error occurred. Please try again.", form_data=form_data, translations=translations[lang])
+    return render_template(template, form_data=form_data, translations=translations[lang])
 
 if __name__ == "__main__":
     app.run(debug=True)
+    
