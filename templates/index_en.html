@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Calculadora de Préstamo Pro por JFMA (JF8989 en GitHub)</title>
+    <title>Loan Calculator Pro by JFMA (JF8989 on GitHub)</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
@@ -17,17 +17,17 @@
   <body>
     <div class="container">
       <header>
-        <h1>Calculadora de Préstamo Pro</h1>
-        <p class="author">Creado por JF8989</p>
+        <h1>Loan Calculator Pro</h1>
+        <p class="author">Created by JF8989</p>
         <nav>
-          <a href="{{ url_for('index_en') }}">English</a>
+            <a href="{{ url_for('index') }}">Español</a>
         </nav>
       </header>
 
       <main>
         <form id="loanForm" method="POST">
           <div class="form-group tooltip">
-            <label for="principal">Principal Actual:</label>
+            <label for="principal">Current Principal:</label>
             <input
               type="text"
               id="principal"
@@ -37,12 +37,12 @@
             />
             <i class="fas fa-dollar-sign input-icon"></i>
             <span class="tooltiptext"
-              >El monto actual que debes del préstamo</span
+              >The current amount you owe on the loan</span
             >
           </div>
 
           <div class="form-group tooltip">
-            <label for="tasa_anual">Tasa de Interés Anual:</label>
+            <label for="tasa_anual">Annual Interest Rate:</label>
             <input
               type="text"
               id="tasa_anual"
@@ -52,12 +52,12 @@
             />
             <i class="fas fa-percent input-icon"></i>
             <span class="tooltiptext"
-              >La tasa de interés anual del préstamo</span
+              >The annual interest rate of the loan</span
             >
           </div>
 
           <div class="form-group tooltip">
-            <label for="pago_mensual_fijo">Pago Mensual Fijo:</label>
+            <label for="pago_mensual_fijo">Fixed Monthly Payment:</label>
             <input
               type="text"
               id="pago_mensual_fijo"
@@ -67,12 +67,14 @@
             />
             <i class="fas fa-money-bill-wave input-icon"></i>
             <span class="tooltiptext"
-              >El pago mensual que estás obligado a hacer</span
+              >The monthly payment you're required to make</span
             >
           </div>
 
           <div class="form-group tooltip">
-            <label for="pago_mensual_adicional">Pago Mensual Adicional:</label>
+            <label for="pago_mensual_adicional"
+              >Additional Monthly Payment:</label
+            >
             <input
               type="text"
               id="pago_mensual_adicional"
@@ -82,12 +84,12 @@
             />
             <i class="fas fa-plus-circle input-icon"></i>
             <span class="tooltiptext"
-              >Cualquier pago adicional que desees hacer cada mes</span
+              >Any additional payment you wish to make each month</span
             >
           </div>
 
           <div class="form-group plazo-group tooltip">
-            <label for="plazo_anios">Plazo Restante del Préstamo:</label>
+            <label for="plazo_anios">Remaining Loan Term:</label>
             <div class="plazo-inputs">
               <input
                 type="text"
@@ -95,7 +97,7 @@
                 name="plazo_anios"
                 value="{{ form_data.plazo_anios }}"
                 required
-                placeholder="Años"
+                placeholder="Years"
               />
               <input
                 type="text"
@@ -103,19 +105,19 @@
                 name="plazo_meses"
                 value="{{ form_data.plazo_meses }}"
                 required
-                placeholder="Meses"
+                placeholder="Months"
               />
             </div>
             <i class="fas fa-calendar-alt input-icon"></i>
             <span class="tooltiptext"
-              >Tiempo restante del préstamo (años y meses)</span
+              >Remaining time on the loan (years and months)</span
             >
           </div>
 
           <div class="form-group button-group">
-            <button type="submit" class="btn-calculate">Calcular</button>
+            <button type="submit" class="btn-calculate">Calculate</button>
             <button type="button" class="btn-reset" onclick="resetForm()">
-              Resetear
+              Reset
             </button>
           </div>
         </form>
@@ -130,17 +132,17 @@
         >
           {% if resumen %}
           <div class="summary">
-            <h2>Resumen Final</h2>
+            <h2>Final Summary</h2>
             <p id="summary-text"></p>
             <div class="summary-grid">
               <div class="summary-item">
                 <i class="fas fa-clock"></i>
-                <p>Tiempo Total</p>
+                <p>Total Time</p>
                 <strong>{{ resumen['Tiempo Total'] }}</strong>
               </div>
               <div class="summary-item">
                 <i class="fas fa-hand-holding-usd"></i>
-                <p>Interés Original Sin Pagos Adicionales</p>
+                <p>Original Interest Without Additional Payments</p>
                 <strong
                   >{{ resumen['Interés Original Sin Pagos Adicionales']
                   }}</strong
@@ -148,29 +150,29 @@
               </div>
               <div class="summary-item">
                 <i class="fas fa-money-bill-wave"></i>
-                <p>Total Intereses Pagados</p>
+                <p>Total Interest Paid</p>
                 <strong>{{ resumen['Total Intereses Pagados'] }}</strong>
               </div>
               <div class="summary-item">
                 <i class="fas fa-piggy-bank"></i>
-                <p>Total Intereses Ahorrados</p>
+                <p>Total Interest Saved</p>
                 <strong>{{ resumen['Total Intereses Ahorrados'] }}</strong>
               </div>
               <div class="summary-item">
                 <i class="fas fa-chart-line"></i>
-                <p>Interés Diario Inicial</p>
+                <p>Initial Daily Interest</p>
                 <strong>{{ resumen['Interés Diario Inicial'] }}</strong>
               </div>
               <div class="summary-item">
                 <i class="fas fa-chart-line"></i>
-                <p>Interés Diario Final</p>
+                <p>Final Daily Interest</p>
                 <strong>{{ resumen['Interés Diario Final'] }}</strong>
               </div>
             </div>
           </div>
           {% endif %} {% if tables %}
           <div class="payment-details">
-            <h2>Detalles de los Pagos Mensuales</h2>
+            <h2>Monthly Payment Details</h2>
             <div class="table-responsive">{{ tables[0]|safe }}</div>
           </div>
           {% endif %}
@@ -181,18 +183,18 @@
     <footer class="site-footer">
       <div class="footer-content">
         <div class="footer-section about">
-          <h3>Sobre la Calculadora de Préstamo Pro</h3>
+          <h3>About Loan Calculator Pro</h3>
           <p>
-            Una herramienta avanzada para calcular y analizar préstamos,
-            desarrollada con precisión y cuidado por JF8989.
+            An advanced tool for calculating and analyzing loans, developed with
+            precision and care by JF8989.
           </p>
         </div>
         <div class="footer-section contact">
-          <h3>Contacto</h3>
+          <h3>Contact</h3>
           <p><i class="fas fa-envelope"></i> juanfrajf.contacto@gmail.com</p>
         </div>
         <div class="footer-section social">
-          <h3>Síguenos</h3>
+          <h3>Follow Us</h3>
           <a
             href="https://www.linkedin.com/in/jfmarcenaroa/"
             class="social-icon"
@@ -209,10 +211,10 @@
       </div>
       <div class="footer-bottom">
         <p class="copyright">
-          © 2024 JF8989. Todos los derechos reservados. Este software y su
-          código fuente están protegidos por leyes de derechos de autor. No se
-          otorga ninguna licencia para su uso, modificación o distribución sin
-          el permiso expreso por escrito del autor.
+          © 2024 JF8989. All rights reserved. This software and its source code
+          are protected by copyright laws. No license is granted for its use,
+          modification, or distribution without the express written permission
+          of the author.
         </p>
       </div>
     </footer>

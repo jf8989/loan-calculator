@@ -7,7 +7,45 @@ app = Flask(__name__)
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 
-def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adicional, plazo_anios, plazo_meses):
+# Translations
+translations = {
+    'en': {
+        'Total Time': 'Total Time',
+        'Original Interest Without Additional Payments': 'Original Interest Without Additional Payments',
+        'Total Interest Paid': 'Total Interest Paid',
+        'Total Interest Saved': 'Total Interest Saved',
+        'Initial Daily Interest': 'Initial Daily Interest',
+        'Final Daily Interest': 'Final Daily Interest',
+        'Monthly Payment Details': 'Monthly Payment Details',
+        'Month': 'Month',
+        'Total Monthly Payment': 'Total Monthly Payment',
+        'Interest Payment': 'Interest Payment',
+        'Principal Payment': 'Principal Payment',
+        'Remaining Principal': 'Remaining Principal',
+        'years': 'years',
+        'months': 'months',
+        'months in total': 'months in total'
+    },
+    'es': {
+        'Total Time': 'Tiempo Total',
+        'Original Interest Without Additional Payments': 'Interés Original Sin Pagos Adicionales',
+        'Total Interest Paid': 'Total Intereses Pagados',
+        'Total Interest Saved': 'Total Intereses Ahorrados',
+        'Initial Daily Interest': 'Interés Diario Inicial',
+        'Final Daily Interest': 'Interés Diario Final',
+        'Monthly Payment Details': 'Detalles de Pagos Mensuales',
+        'Month': 'Mes',
+        'Total Monthly Payment': 'Pago Mensual Total',
+        'Interest Payment': 'Pago Intereses',
+        'Principal Payment': 'Pago Principal',
+        'Remaining Principal': 'Principal Restante',
+        'years': 'años',
+        'months': 'meses',
+        'months in total': 'meses en total'
+    }
+}
+
+def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adicional, plazo_anios, plazo_meses, lang='es'):
     try:
         # Convert inputs to appropriate types
         principal = float(principal.replace('$', '').replace(',', ''))
@@ -90,6 +128,13 @@ def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adi
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    return handle_request('index.html')
+
+@app.route("/en", methods=["GET", "POST"])
+def index_en():
+    return handle_request('index_en.html')
+
+def handle_request(template):
     form_data = {
         "principal": "",
         "tasa_anual": "",
@@ -133,13 +178,13 @@ def index():
                 table_html += '</tr>'
             table_html += '</tbody></table>'
 
-            return render_template("index.html", resumen=resumen_final, tables=[table_html], form_data=form_data)
+            return render_template(template, resumen=resumen_final, tables=[table_html], form_data=form_data)
         except ValueError as e:
-            return render_template("index.html", error=str(e), form_data=form_data)
+            return render_template(template, error=str(e), form_data=form_data)
         except Exception as e:
             app.logger.error(f"Error inesperado: {str(e)}")
-            return render_template("index.html", error="Ocurrió un error inesperado. Por favor, intente nuevamente.", form_data=form_data)
-    return render_template("index.html", form_data=form_data)
+            return render_template(template, error="An unexpected error occurred. Please try again.", form_data=form_data)
+    return render_template(template, form_data=form_data)
 
 if __name__ == "__main__":
     app.run(debug=True)
