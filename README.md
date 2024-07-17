@@ -14,6 +14,8 @@ This project was born out of a personal need to calculate my student loan payoff
 
 The primary goal of this repository is to exhibit my empirical Python programming abilities and my journey from a console app to a web application. By making this project public, I aim to demonstrate my proficiency in developing practical, real-world applications using Python and modern web technologies.
 
+
+
 ## 🛠️ Technologies Used
 
 - Backend: Python with Flask
@@ -51,9 +53,25 @@ In real-life scenarios, making additional payments doesn't automatically reduce 
 
 If you don't take these steps, the lender might treat the extra payment as an advance on your next regular payment, which won't reduce your long-term interest payments.
 
-## 📝 Disclaimer
+## ⚖️ Legal Disclaimer
 
-This project is a personal endeavor created to demonstrate programming skills. While efforts have been made to ensure accuracy, it should not be used as a substitute for professional financial advice. Always consult with a qualified financial advisor before making important financial decisions.
+**IMPORTANT: READ CAREFULLY BEFORE USING THE LOAN CALCULATOR PRO**
+
+The Loan Calculator Pro is provided for informational and educational purposes only. By using this calculator, you acknowledge and agree to the following:
+
+1. **Not Financial Advice**: The information and results provided by this calculator do not constitute financial advice, legal advice, or any other type of professional advice. It is not intended to replace the advice of qualified financial professionals.
+
+2. **No Guarantee of Accuracy**: While we strive for accuracy, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability, or availability of the calculator or the information it provides.
+
+3. **User Responsibility**: Any reliance you place on the information provided by this calculator is strictly at your own risk. It is your responsibility to verify all information and calculations before making any financial decisions.
+
+4. **No Liability**: The creator of Loan Calculator Pro, its affiliates, partners, or contributors shall not be liable for any loss or damage, including without limitation, indirect or consequential loss or damage, or any loss or damage whatsoever arising from the use of this calculator.
+
+5. **Seek Professional Advice**: Before making any financial decisions, especially those related to loans or large financial commitments, you should consult with a qualified financial advisor, accountant, or legal professional.
+
+6. **Changes and Updates**: The information and functionality of this calculator may be changed or updated without notice. We are not responsible for keeping the calculator up-to-date or for any outcomes resulting from potential inaccuracies or outdated information.
+
+By using the Loan Calculator Pro, you signify your acceptance of this disclaimer. If you do not agree with any part of this disclaimer, please do not use the calculator.
 
 ## 📜 License
 
