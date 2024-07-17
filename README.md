@@ -22,7 +22,7 @@ The primary goal of this repository is to exhibit my empirical Python programmin
 - Frontend: HTML, CSS, JavaScript
 - Deployment: Vercel
 
-## ✨ Features
+## ✨ Features at a Glance
 
 Loan Calculator Pro offers a unique and truthful approach to loan calculations. It provides:
 
@@ -32,6 +32,13 @@ Loan Calculator Pro offers a unique and truthful approach to loan calculations. 
 - 📱 Responsive design for mobile and desktop use
 
 The results from this calculator may sometimes appear unusual. This is intentional and reflects the reality of complex loan structures. If you encounter unexpected outcomes, it's likely highlighting either a particularly effective or potentially risky loan strategy.
+
+## 🌈 Cool Features
+
+- **Real-time Calculations**: The app provides instant results as you input your loan details.
+- **Interactive Charts**: Visualize your loan payoff journey with dynamic charts.
+- **Responsive Design**: Use the calculator seamlessly on any device.
+- **Tooltip Explanations**: Hover over terms to get simple explanations of complex financial concepts.
 
 ## 💼 Loan Terms and Concepts
 
@@ -76,13 +83,6 @@ By using the Loan Calculator Pro, you signify your acceptance of this disclaimer
 ## 📜 License
 
 This project is proprietary and is not licensed for use, modification, or distribution. All rights reserved. However, you're welcome to use the live demo for personal, non-profit calculations.
-
-## 🌈 Cool Features
-
-- **Real-time Calculations**: The app provides instant results as you input your loan details.
-- **Interactive Charts**: Visualize your loan payoff journey with dynamic charts.
-- **Responsive Design**: Use the calculator seamlessly on any device.
-- **Tooltip Explanations**: Hover over terms to get simple explanations of complex financial concepts.
 
 ---
 
