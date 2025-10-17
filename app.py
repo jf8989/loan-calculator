@@ -1,3 +1,5 @@
+# Path: app.py
+
 from flask import Flask, request, render_template
 import pandas as pd
 import logging
@@ -45,91 +47,150 @@ translations = {
     }
 }
 
-def calcular_prestamo(principal, tasa_anual, pago_mensual_fijo, pago_mensual_adicional, plazo_anios, plazo_meses, lang='es'):
-    try:
-        # Convert inputs to appropriate types
-        principal = float(principal.replace('$', '').replace(',', ''))
-        tasa_anual = float(tasa_anual.replace('%', ''))
-        pago_mensual_fijo = float(pago_mensual_fijo.replace('$', '').replace(',', ''))
-        pago_mensual_adicional = float(pago_mensual_adicional.replace('$', '').replace(',', ''))
-        plazo_total_meses = int(plazo_anios) * 12 + int(plazo_meses)
 
-        # Calculate monthly interest rate
-        tasa_mensual = tasa_anual / 12 / 100
+def calcular_prestamo(principal,
+                      tasa_anual,
+                      pago_mensual_fijo,
+                      pago_mensual_adicional,
+                      plazo_anios,
+                      plazo_meses,
+                      lang='es'):
+    """
+    Robust amortization:
+    - Computes the theoretical base monthly payment from (principal, rate, term).
+    - Uses user's fixed monthly payment for the actual schedule if provided; otherwise uses the base.
+    - Applies additional monthly payment to principal each period.
+    - Blocks negative amortization (payment < monthly interest).
+    - Handles 0% interest cleanly.
+    - Caps the final payment to avoid negative balances.
+    - Returns a clean schedule and summary with correct 'original interest' baseline.
+    """
 
-        # Calculate daily interest rate
-        tasa_diaria = tasa_anual / 365 / 100
+    # ---- Parsing helpers (kept local to avoid global pollution) ----
+    def parse_money(value_str: str) -> float:
+        return float(value_str.replace('$', '').replace(',', '').strip() or 0)
 
-        # Calculate original interest if no additional payments are made
-        total_pagos_original = pago_mensual_fijo * plazo_total_meses
-        interes_original = total_pagos_original - principal
+    def parse_percent(value_str: str) -> float:
+        return float(value_str.replace('%', '').strip() or 0)
 
-        pagos = []
-        total_intereses_pagados = 0
-        mes = 0
-        saldo_restante = principal
+    # ---- Parse & validate inputs ----
+    L = parse_money(principal)
+    apr = parse_percent(tasa_anual)
+    user_fixed_payment = parse_money(pago_mensual_fijo)
+    extra_payment = parse_money(pago_mensual_adicional)
+    n = int(plazo_anios) * 12 + int(plazo_meses)
 
-        while saldo_restante > 0 and mes < plazo_total_meses:
-            mes += 1
-            interes_mes = saldo_restante * tasa_mensual
-            pago_total = pago_mensual_fijo + pago_mensual_adicional
+    if L <= 0:
+        raise ValueError("Principal must be greater than zero.")
+    if n <= 0:
+        raise ValueError("Loan term must be at least 1 month.")
+    if apr < 0:
+        raise ValueError("APR cannot be negative.")
+    if extra_payment < 0:
+        raise ValueError("Additional payment cannot be negative.")
 
-            if saldo_restante + interes_mes < pago_total:
-                if pago_mensual_adicional > 0:
-                    pago_total = saldo_restante + interes_mes
-                pago_principal = saldo_restante
-                interes_mes = pago_total - pago_principal
-                saldo_restante = 0
-            else:
-                pago_principal = pago_total - interes_mes
-                saldo_restante -= pago_principal
+    r_month = apr / 12.0 / 100.0                 # monthly rate
+    r_day = apr / 365.0 / 100.0                  # daily rate (informational)
 
-            total_intereses_pagados += interes_mes
+    # ---- Base (theoretical) amortizing payment for the given term ----
+    if abs(r_month) < 1e-12:
+        base_payment = L / n
+    else:
+        base_payment = (r_month * L) / (1.0 - (1.0 + r_month) ** (-n))
 
-            pagos.append((
-                mes,
-                f"${pago_total:,.2f}",
-                f"${interes_mes:,.2f}",
-                f"${pago_principal:,.2f}",
-                f"${saldo_restante:,.2f}"
-            ))
+    # ---- Actual payment used for the live schedule ----
+    # If the user typed a fixed payment, use it. Otherwise, use the base.
+    actual_payment = user_fixed_payment if user_fixed_payment > 0 else base_payment
 
-            if saldo_restante == 0:
-                break
+    # Negative amortization check (only meaningful if r > 0)
+    if r_month > 0 and actual_payment <= L * r_month + 1e-9:
+        raise ValueError(
+            "Monthly payment is too low to cover monthly interest. Increase the payment or extend the term."
+        )
 
-        # Calculate interest savings
-        ahorro_intereses = interes_original - total_intereses_pagados if pago_mensual_adicional > 0 else 0
+    # ---- Baseline 'original interest' (no extras, base_payment) ----
+    original_total_paid = base_payment * n
+    original_interest = max(original_total_paid - L, 0.0)
 
-        resumen = {
-            translations[lang]['Total Time']: f"{mes // 12} {translations[lang]['years']}, {mes % 12} {translations[lang]['months']} ({mes} {translations[lang]['months in total']})",
-            translations[lang]['Total Interest Paid']: f"${total_intereses_pagados:,.2f}",
-            translations[lang]['Total Interest Saved']: f"${ahorro_intereses:,.2f}",
-            translations[lang]['Initial Daily Interest']: f"${principal * tasa_diaria:,.2f}",
-            translations[lang]['Final Daily Interest']: f"${saldo_restante * tasa_diaria:,.2f}",
-            translations[lang]['Original Interest Without Additional Payments']: f"${interes_original:,.2f}",
-        }
+    # ---- Build the actual schedule with (actual_payment + extra) ----
+    balance = L
+    month = 0
+    total_interest_paid = 0.0
+    schedule_rows = []
 
-        df_pagos = pd.DataFrame(pagos, columns=[
+    # Safety cap to avoid infinite loops if user tampers inputs
+    max_months = n * 2 + 120
+
+    while balance > 1e-8 and month < max_months:
+        month += 1
+        interest_m = balance * r_month
+        payment_total = actual_payment + extra_payment
+
+        # Principal for this month
+        principal_m = payment_total - interest_m
+        if principal_m <= 0 and r_month > 0:
+            # Would increase balance -> reject
+            raise ValueError(
+                "Payment does not cover interest; the balance would increase. Please raise the monthly payment."
+            )
+
+        # Cap the final payment so we never go negative
+        if principal_m > balance:
+            principal_m = balance
+            payment_total = interest_m + principal_m
+
+        balance -= principal_m
+        total_interest_paid += interest_m
+
+        schedule_rows.append((
+            month,
+            f"${payment_total:,.2f}",
+            f"${interest_m:,.2f}",
+            f"${principal_m:,.2f}",
+            f"${max(balance, 0.0):,.2f}",
+        ))
+
+        if balance <= 1e-8:
+            balance = 0.0
+            break
+
+    if month >= max_months and balance > 0:
+        raise ValueError("Simulation safety cap reached; check inputs (payment may be too small).")
+
+    interest_savings = max(original_interest - total_interest_paid, 0.0)
+
+    resumen = {
+        translations[lang]['Total Time']: f"{month // 12} {translations[lang]['years']}, {month % 12} {translations[lang]['months']} ({month} {translations[lang]['months in total']})",
+        translations[lang]['Total Interest Paid']: f"${total_interest_paid:,.2f}",
+        translations[lang]['Total Interest Saved']: f"${interest_savings:,.2f}",
+        translations[lang]['Initial Daily Interest']: f"${L * r_day:,.2f}",
+        translations[lang]['Final Daily Interest']: f"${balance * r_day:,.2f}",
+        translations[lang]['Original Interest Without Additional Payments']: f"${original_interest:,.2f}",
+    }
+
+    df_pagos = pd.DataFrame(
+        schedule_rows,
+        columns=[
             translations[lang]['Month'],
             translations[lang]['Total Monthly Payment'],
             translations[lang]['Interest Payment'],
             translations[lang]['Principal Payment'],
-            translations[lang]['Remaining Principal']
-        ])
+            translations[lang]['Remaining Principal'],
+        ],
+    )
 
-        return df_pagos, resumen
+    return df_pagos, resumen
 
-    except Exception as e:
-        app.logger.error(f"Error in loan calculation: {str(e)}")
-        raise ValueError(f"Error in calculation: {str(e)}")
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     return handle_request('index.html', 'es')
 
+
 @app.route("/en", methods=["GET", "POST"])
 def index_en():
     return handle_request('index_en.html', 'en')
+
 
 def handle_request(template, lang):
     form_data = {
@@ -140,7 +201,7 @@ def handle_request(template, lang):
         "plazo_anios": "",
         "plazo_meses": ""
     }
-    
+
     if request.method == "POST":
         try:
             form_data = {
@@ -153,11 +214,11 @@ def handle_request(template, lang):
             }
 
             df_pagos, resumen_final = calcular_prestamo(
-                form_data["principal"], 
-                form_data["tasa_anual"], 
-                form_data["pago_mensual_fijo"], 
-                form_data["pago_mensual_adicional"], 
-                form_data["plazo_anios"], 
+                form_data["principal"],
+                form_data["tasa_anual"],
+                form_data["pago_mensual_fijo"],
+                form_data["pago_mensual_adicional"],
+                form_data["plazo_anios"],
                 form_data["plazo_meses"],
                 lang
             )
@@ -176,14 +237,30 @@ def handle_request(template, lang):
                 table_html += '</tr>'
             table_html += '</tbody></table>'
 
-            return render_template(template, resumen=resumen_final, tables=[table_html], form_data=form_data, translations=translations[lang])
+            return render_template(
+                template,
+                resumen=resumen_final,
+                tables=[table_html],
+                form_data=form_data,
+                translations=translations[lang]
+            )
         except ValueError as e:
-            return render_template(template, error=str(e), form_data=form_data, translations=translations[lang])
+            return render_template(
+                template,
+                error=str(e),
+                form_data=form_data,
+                translations=translations[lang]
+            )
         except Exception as e:
             app.logger.error(f"Unexpected error: {str(e)}")
-            return render_template(template, error="An unexpected error occurred. Please try again.", form_data=form_data, translations=translations[lang])
+            return render_template(
+                template,
+                error="An unexpected error occurred. Please try again.",
+                form_data=form_data,
+                translations=translations[lang]
+            )
     return render_template(template, form_data=form_data, translations=translations[lang])
+
 
 if __name__ == "__main__":
     app.run(debug=True)
-    
