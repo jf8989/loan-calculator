@@ -418,6 +418,19 @@ body.theme-dark .site-footer { background-color: #0b1220; color: #cbd5e1; }
     color: #3498db;
 }
 
+/* Link-like button for footer legal link */
+.linklike {
+    background: none;
+    border: none;
+    color: #9bd; /* subtle link color on dark backgrounds */
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font: inherit;
+}
+.linklike:hover { filter: brightness(1.15); }
+body.theme-dark .linklike { color: #93c5fd; }
+
 .footer-bottom {
     background-color: #34495e;
     padding: 15px 0;
@@ -456,6 +469,65 @@ body.theme-dark .footer-bottom { background-color: #0f172a; }
     animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Modal (legal) */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(2px);
+    z-index: 10000;
+    display: none;
+}
+.modal-backdrop.show { display: block; }
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 10001;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.modal.show { display: flex; }
+
+.modal-dialog {
+    width: min(840px, 95vw);
+    max-height: 85vh;
+    overflow: auto;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-color);
+}
+.modal-header h3 { margin: 0; }
+
+.modal-body {
+    padding: 18px;
+}
+.modal-body h4 { margin: 14px 0 8px; }
+.modal-body p { margin: 8px 0; }
+.modal-body ul { padding-left: 18px; margin: 8px 0; }
+.modal-body li { margin: 6px 0; }
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+}
 
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -552,35 +624,17 @@ body.theme-dark .footer-bottom { background-color: #0f172a; }
 
 /* ========= Print tweaks (reliable PDF via window.print) ========= */
 @media print {
-    @page { margin: 12mm; } /* adjust if you want tighter margins */
-
-    /* exact color where supported */
+    @page { margin: 12mm; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-    /* Hide non-report stuff for PDF cleanliness */
-    nav, header, .site-footer, .footer-bottom, .button-group, .theme-toggle, #loading-overlay { 
+    nav, header, .site-footer, .footer-bottom, .button-group, .theme-toggle, #loading-overlay,
+    .modal, .modal-backdrop { 
         display: none !important; 
     }
-
-    /* Ensure report starts at top and title doesn't get pushed to later pages */
-    #report-root { 
-        break-before: avoid;
-        page-break-before: avoid;
-        margin-top: 0 !important;
-    }
-
-    .print-header { 
-        display: block !important; 
-        margin-bottom: 8px; 
-    }
-
-    /* Avoid breaking key blocks across pages */
+    #report-root { break-before: avoid; page-break-before: avoid; margin-top: 0 !important; }
+    .print-header { display: block !important; margin-bottom: 8px; }
     h1, h2, .summary, .payment-details, table, tr, .summary-grid, .summary-item {
-        break-inside: avoid;
-        page-break-inside: avoid;
+        break-inside: avoid; page-break-inside: avoid;
     }
-
-    /* Tighten spacing to reduce orphan page breaks */
     .container { padding: 0 !important; }
     .results-container { box-shadow: none; border: none; margin-top: 0 !important; padding: 0 !important; }
 }

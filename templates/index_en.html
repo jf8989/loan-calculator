@@ -181,6 +181,10 @@
           <a href="https://www.linkedin.com/in/jfmarcenaroa/" class="social-icon" target="_blank"><i class="fab fa-linkedin"></i></a>
           <a href="https://github.com/jf8989?tab=repositories" class="social-icon" target="_blank"><i class="fab fa-github"></i></a>
         </div>
+        <div class="footer-section legal">
+          <h3>Legal</h3>
+          <button type="button" class="linklike" onclick="openLegal()">Legal Disclaimer</button>
+        </div>
       </div>
       <div class="footer-bottom">
         <p class="copyright">
@@ -191,5 +195,34 @@
         </p>
       </div>
     </footer>
+
+    <!-- LEGAL MODAL -->
+    <div id="modal-backdrop" class="modal-backdrop" aria-hidden="true" onclick="closeLegal()"></div>
+    <div id="legal-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="legal-title" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="legal-title">⚖️ Legal Disclaimer</h3>
+          <button class="modal-close" aria-label="Close" onclick="closeLegal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p><strong>IMPORTANT: READ CAREFULLY BEFORE USING THE LOAN CALCULATOR PRO</strong></p>
+          <p>The Loan Calculator Pro is provided for informational and educational purposes only. By using this calculator, you acknowledge and agree to the following:</p>
+          <ul>
+            <li><strong>Not Financial Advice:</strong> The information and results provided by this calculator do not constitute financial advice, legal advice, or any other type of professional advice. It is not intended to replace the advice of qualified financial professionals.</li>
+            <li><strong>No Guarantee of Accuracy:</strong> While we strive for accuracy, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability, or availability of the calculator or the information it provides.</li>
+            <li><strong>User Responsibility:</strong> Any reliance you place on the information provided by this calculator is strictly at your own risk. It is your responsibility to verify all information and calculations before making any financial decisions.</li>
+            <li><strong>No Liability:</strong> The creator of Loan Calculator Pro, its affiliates, partners, or contributors shall not be liable for any loss or damage, including without limitation, indirect or consequential loss or damage, or any loss or damage whatsoever arising from the use of this calculator.</li>
+            <li><strong>Seek Professional Advice:</strong> Before making any financial decisions, especially those related to loans or large financial commitments, you should consult with a qualified financial advisor, accountant, or legal professional.</li>
+            <li><strong>Changes and Updates:</strong> The information and functionality of this calculator may be changed or updated without notice. We are not responsible for keeping the calculator up-to-date or for any outcomes resulting from potential inaccuracies or outdated information.</li>
+          </ul>
+          <p>By using the Loan Calculator Pro, you signify your acceptance of this disclaimer. If you do not agree with any part of this disclaimer, please do not use the calculator.</p>
+
+          <h4>📜 License</h4>
+          <p>This project is proprietary and is not licensed for use, modification, or distribution. All rights reserved. However, you're welcome to use the live demo for personal, non-profit calculations.</p>
+
+          <p><em>Remember: Understanding your loan terms is crucial. If you're just learning about loans, think of it like a piggy bank that gets hungrier over time. The sooner you feed it (pay it), the less hungry (interest) it gets! 🐷💰</em></p>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

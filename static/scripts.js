@@ -102,17 +102,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Masks for better UX (kept)
   setupInputMasks();
+
+  // Close modal on ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLegal();
+  });
 });
 
 /* ------------------ Theming ------------------ */
 function initTheme(themeBtn) {
-  // Decide initial theme
   const stored = localStorage.getItem("theme");
   const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   const theme = stored || (prefersDark ? "dark" : "light");
   setTheme(theme);
 
-  // Toggle handler
   if (themeBtn) {
     themeBtn.addEventListener("click", () => {
       const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
@@ -120,7 +123,6 @@ function initTheme(themeBtn) {
     });
   }
 
-  // Update icon/label
   function setTheme(t) {
     document.body.classList.toggle("theme-dark", t === "dark");
     localStorage.setItem("theme", t);
@@ -271,30 +273,43 @@ function getRequiredMessage() {
 
 /* ------------------ PDF download (reliable: browser print) ------------------ */
 function downloadReportPDF() {
-  // Ensure results are visible before printing
   const results = document.getElementById("results");
   if (!results || results.classList.contains("hidden")) {
-    // Nothing to print yet
     const lang = document.documentElement.lang || "en";
     alert(lang.startsWith("es")
       ? "Primero calcula el préstamo para generar el reporte."
       : "Please calculate the loan first to generate the report.");
     return;
   }
-
-  // Force light theme for print to keep text legible
   const wasDark = document.body.classList.contains("theme-dark");
   if (wasDark) document.body.classList.remove("theme-dark");
-
-  // Kick off the browser's print to PDF
   window.print();
+  if (wasDark) setTimeout(() => document.body.classList.add("theme-dark"), 50);
+}
+window.downloadReportPDF = downloadReportPDF;
 
-  // Restore theme after print
-  if (wasDark) {
-    // Some browsers are async—restore after a tick
-    setTimeout(() => document.body.classList.add("theme-dark"), 50);
-  }
+/* ------------------ Legal modal ------------------ */
+function openLegal() {
+  const modal = document.getElementById("legal-modal");
+  const backdrop = document.getElementById("modal-backdrop");
+  if (!modal || !backdrop) return;
+  modal.classList.add("show");
+  backdrop.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  // focus trap start
+  const closeBtn = modal.querySelector(".modal-close");
+  if (closeBtn) closeBtn.focus();
 }
 
-// expose for inline onclick
-window.downloadReportPDF = downloadReportPDF;
+function closeLegal() {
+  const modal = document.getElementById("legal-modal");
+  const backdrop = document.getElementById("modal-backdrop");
+  if (!modal || !backdrop) return;
+  modal.classList.remove("show");
+  backdrop.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+window.openLegal = openLegal;
+window.closeLegal = closeLegal;
