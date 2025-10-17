@@ -1,3 +1,5 @@
+// static/scripts.js
+
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("loanForm");
   const inputs = form.querySelectorAll('input[type="text"]');
