@@ -1,0 +1,4 @@
+# file: C:\00 Development\loan-calculator\app.py
+# hypothesis_version: 6.142.1
+
+[0.0, 1e-12, 1e-09, 1e-08, 1.0, 12.0, 100.0, 365.0, 120, '$', '%', ',', '/', '/en', '</tbody></table>', '</tr>', '</tr></thead>', '<tbody>', '<thead><tr>', '<tr>', 'Final Daily Interest', 'GET', 'Interest Payment', 'Interés Diario Final', 'Mes', 'Month', 'POST', 'Pago Intereses', 'Pago Mensual Total', 'Pago Principal', 'Principal Payment', 'Principal Restante', 'Remaining Principal', 'Tiempo Total', 'Total Interest Paid', 'Total Interest Saved', 'Total Time', '__main__', 'años', 'en', 'es', 'index.html', 'index_en.html', 'meses', 'meses en total', 'months', 'months in total', 'pago_mensual_fijo', 'plazo_anios', 'plazo_meses', 'principal', 'tasa_anual', 'years']

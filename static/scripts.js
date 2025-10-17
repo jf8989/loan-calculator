@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("loanForm");
   const inputs = form.querySelectorAll('input[type="text"]');
   const resultsContainer = document.getElementById("results");
+  const overlay = document.getElementById("loading-overlay");
+  const themeBtn = document.getElementById("themeToggle");
 
   // Ensure each form-group has a persistent error placeholder to avoid reflow
   document.querySelectorAll(".form-group").forEach((group) => {
@@ -16,7 +18,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Form submission handler (simple client validation)
+  // --- Theme setup (persist to localStorage) ---
+  initTheme(themeBtn);
+
+  // --- If results are visible after a POST, auto-scroll to them ---
+  setTimeout(() => {
+    if (resultsContainer && !resultsContainer.classList.contains("hidden")) {
+      resultsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, 150);
+
+  // --- Show overlay spinner during submit (classic POST) ---
   form.addEventListener("submit", function (event) {
     let isValid = true;
 
@@ -34,12 +46,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Fade results container for a nicer transition without layout jump
-    if (resultsContainer) {
-      resultsContainer.style.opacity = "0";
-      setTimeout(() => {
-        resultsContainer.style.opacity = "1";
-      }, 200);
+    if (overlay) {
+      overlay.classList.add("active");
+      overlay.setAttribute("aria-hidden", "false");
+      form.querySelector(".btn-calculate")?.setAttribute("disabled", "true");
     }
   });
 
@@ -94,6 +104,34 @@ document.addEventListener("DOMContentLoaded", function () {
   setupInputMasks();
 });
 
+/* ------------------ Theming ------------------ */
+function initTheme(themeBtn) {
+  // Decide initial theme
+  const stored = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = stored || (prefersDark ? "dark" : "light");
+  setTheme(theme);
+
+  // Toggle handler
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
+      setTheme(next);
+    });
+  }
+
+  // Update icon/label
+  function setTheme(t) {
+    document.body.classList.toggle("theme-dark", t === "dark");
+    localStorage.setItem("theme", t);
+    if (themeBtn) {
+      themeBtn.innerHTML = t === "dark" ? '<i class="fas fa-sun"></i> Light' : '<i class="fas fa-moon"></i> Dark';
+      themeBtn.setAttribute("aria-label", t === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    }
+  }
+}
+
+/* ------------------ Reset & formatting helpers (existing, kept) ------------------ */
 function resetForm() {
   const form = document.getElementById("loanForm");
   form.reset();
@@ -117,21 +155,15 @@ function clearResults() {
 }
 
 function formatCurrency(input) {
-  // Remove non-digit characters except for the decimal point
   let value = input.value.replace(/[^\d.]/g, "");
-
-  // Ensure only one decimal point
   let parts = value.split(".");
   if (parts.length > 2) {
     parts = [parts[0], parts.slice(1).join("")];
   }
   value = parts.join(".");
-
-  // Parse the value and format it
   let numValue = parseFloat(value);
   if (!isNaN(numValue)) {
-    const formatted =
-      "$" + numValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const formatted = "$" + numValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     input.value = formatted;
   } else {
     input.value = "";
@@ -145,15 +177,9 @@ function formatPercentage(input) {
     return;
   }
   const parts = raw.split(".");
-  if (parts.length > 2) {
-    raw = parts[0] + "." + parts.slice(1).join("");
-  }
+  if (parts.length > 2) raw = parts[0] + "." + parts.slice(1).join("");
   let value = parseFloat(raw);
-  if (isNaN(value)) {
-    input.value = "";
-    return;
-  }
-  // Cap to two decimals
+  if (isNaN(value)) { input.value = ""; return; }
   value = Math.round(value * 100) / 100;
   input.value = value.toFixed(2) + "%";
 }
@@ -163,7 +189,7 @@ function showError(input, message) {
   const errorElement = input.parentElement.querySelector(".error-message");
   if (errorElement) {
     errorElement.textContent = message;
-    errorElement.style.display = "block"; // don’t insert/remove → no layout jump
+    errorElement.style.display = "block";
   }
 }
 
@@ -187,7 +213,7 @@ function updateSummaryText(principal, tasaAnual, pagoMensualFijo, pagoMensualAdi
     `$${pagoMensualAdicional}:`;
 }
 
-// Smooth scroll helper (unused here; kept for future)
+// Smooth scroll helper (kept)
 function scrollToResults() {
   const resultsElement = document.getElementById("results");
   if (resultsElement) {
@@ -195,7 +221,7 @@ function scrollToResults() {
   }
 }
 
-// Input masks (kept, but with small safety tweaks)
+// Input masks (kept, with safety tweaks)
 function setupInputMasks() {
   const currencyIds = ["principal", "pago_mensual_fijo", "pago_mensual_adicional"];
   currencyIds.forEach((id) => {
@@ -239,7 +265,36 @@ function setupInputMasks() {
 }
 
 function getRequiredMessage() {
-  // Simple bilingual fallback based on page lang
   const lang = document.documentElement.lang || "en";
   return lang.startsWith("es") ? "Este campo es requerido" : "This field is required";
 }
+
+/* ------------------ PDF download (reliable: browser print) ------------------ */
+function downloadReportPDF() {
+  // Ensure results are visible before printing
+  const results = document.getElementById("results");
+  if (!results || results.classList.contains("hidden")) {
+    // Nothing to print yet
+    const lang = document.documentElement.lang || "en";
+    alert(lang.startsWith("es")
+      ? "Primero calcula el préstamo para generar el reporte."
+      : "Please calculate the loan first to generate the report.");
+    return;
+  }
+
+  // Force light theme for print to keep text legible
+  const wasDark = document.body.classList.contains("theme-dark");
+  if (wasDark) document.body.classList.remove("theme-dark");
+
+  // Kick off the browser's print to PDF
+  window.print();
+
+  // Restore theme after print
+  if (wasDark) {
+    // Some browsers are async—restore after a tick
+    setTimeout(() => document.body.classList.add("theme-dark"), 50);
+  }
+}
+
+// expose for inline onclick
+window.downloadReportPDF = downloadReportPDF;

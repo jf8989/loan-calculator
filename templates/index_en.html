@@ -8,19 +8,26 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='styles.css') }}"
-    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <!-- html2pdf for client-side PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
     <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
   </head>
   <body>
+    <!-- Loading overlay (shown while submitting) -->
+    <div id="loading-overlay" aria-hidden="true">
+      <div class="spinner" role="status" aria-label="Calculating..."></div>
+    </div>
+
     <div class="container">
       <header>
         <h1>Loan Calculator Pro</h1>
         <p class="author">Created by JF8989</p>
         <nav>
           <a href="{{ url_for('index') }}">Español</a>
+          <button type="button" id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+            <i class="fas fa-moon"></i> Dark
+          </button>
         </nav>
       </header>
 
@@ -29,175 +36,123 @@
           <div class="form-group tooltip">
             <label for="principal">Current Principal:</label>
             <input
-              type="text"
-              id="principal"
-              name="principal"
-              inputmode="decimal"
-              value="{{ form_data.principal }}"
-              required
+              type="text" id="principal" name="principal" inputmode="decimal"
+              value="{{ form_data.principal }}" required
             />
             <i class="fas fa-dollar-sign input-icon"></i>
-            <span class="tooltiptext"
-              >The current amount you owe on the loan</span
-            >
+            <span class="tooltiptext">The current amount you owe on the loan</span>
           </div>
 
           <div class="form-group tooltip">
             <label for="tasa_anual">Annual Interest Rate:</label>
             <input
-              type="text"
-              id="tasa_anual"
-              name="tasa_anual"
-              inputmode="decimal"
-              value="{{ form_data.tasa_anual }}"
-              required
+              type="text" id="tasa_anual" name="tasa_anual" inputmode="decimal"
+              value="{{ form_data.tasa_anual }}" required
             />
             <i class="fas fa-percent input-icon"></i>
-            <span class="tooltiptext"
-              >The annual interest rate of the loan</span
-            >
+            <span class="tooltiptext">The annual interest rate of the loan</span>
           </div>
 
           <div class="form-group tooltip">
             <label for="pago_mensual_fijo">Fixed Monthly Payment:</label>
             <input
-              type="text"
-              id="pago_mensual_fijo"
-              name="pago_mensual_fijo"
-              inputmode="decimal"
-              value="{{ form_data.pago_mensual_fijo }}"
-              required
+              type="text" id="pago_mensual_fijo" name="pago_mensual_fijo" inputmode="decimal"
+              value="{{ form_data.pago_mensual_fijo }}" required
             />
             <i class="fas fa-money-bill-wave input-icon"></i>
-            <span class="tooltiptext"
-              >The monthly payment you're required to make</span
-            >
+            <span class="tooltiptext">The monthly payment you're required to make</span>
           </div>
 
           <div class="form-group tooltip">
-            <label for="pago_mensual_adicional"
-              >Additional Monthly Payment:</label
-            >
+            <label for="pago_mensual_adicional">Additional Monthly Payment:</label>
             <input
-              type="text"
-              id="pago_mensual_adicional"
-              name="pago_mensual_adicional"
-              inputmode="decimal"
-              value="{{ form_data.pago_mensual_adicional }}"
-              required
+              type="text" id="pago_mensual_adicional" name="pago_mensual_adicional" inputmode="decimal"
+              value="{{ form_data.pago_mensual_adicional }}" required
             />
             <i class="fas fa-plus-circle input-icon"></i>
-            <span class="tooltiptext"
-              >Any additional payment you wish to make each month</span
-            >
+            <span class="tooltiptext">Any additional payment you wish to make each month</span>
           </div>
 
           <div class="form-group plazo-group tooltip">
             <label for="plazo_anios">Remaining Loan Term:</label>
             <div class="plazo-inputs">
               <input
-                type="text"
-                id="plazo_anios"
-                name="plazo_anios"
-                inputmode="numeric"
-                value="{{ form_data.plazo_anios }}"
-                required
-                placeholder="Years"
+                type="text" id="plazo_anios" name="plazo_anios" inputmode="numeric"
+                value="{{ form_data.plazo_anios }}" required placeholder="Years"
               />
               <input
-                type="text"
-                id="plazo_meses"
-                name="plazo_meses"
-                inputmode="numeric"
-                value="{{ form_data.plazo_meses }}"
-                required
-                placeholder="Months"
+                type="text" id="plazo_meses" name="plazo_meses" inputmode="numeric"
+                value="{{ form_data.plazo_meses }}" required placeholder="Months"
               />
             </div>
             <i class="fas fa-calendar-alt input-icon"></i>
-            <span class="tooltiptext"
-              >Remaining time on the loan (years and months)</span
-            >
+            <span class="tooltiptext">Remaining time on the loan (years and months)</span>
           </div>
 
           <div class="form-group button-group">
             <button type="submit" class="btn-calculate">Calculate</button>
-            <button type="button" class="btn-reset" onclick="resetForm()">
-              Reset
-            </button>
+            <button type="button" class="btn-reset" onclick="resetForm()">Reset</button>
           </div>
         </form>
 
         {% if error %}
-        <div
-          class="error-message"
-          style="position: static; display: block; margin-top: 10px"
-        >
+        <div class="error-message" style="position:static; display:block; margin-top:10px;">
           {{ error }}
         </div>
         {% endif %}
 
-        <div
-          id="results"
-          class="results-container {% if not resumen %}hidden{% endif %}"
-        >
-          {% if resumen %}
-          <div class="summary">
-            <h2>Final Summary</h2>
-            <p id="summary-text"></p>
-            <div class="summary-grid">
-              <div class="summary-item">
-                <i class="fas fa-clock"></i>
-                <p>{{ translations['Total Time'] }}</p>
-                <strong>{{ resumen[translations['Total Time']] }}</strong>
-              </div>
-              <div class="summary-item">
-                <i class="fas fa-hand-holding-usd"></i>
-                <p>
-                  {{ translations['Original Interest Without Additional
-                  Payments'] }}
-                </p>
-                <strong
-                  >{{ resumen[translations['Original Interest Without Additional
-                  Payments']] }}</strong
-                >
-              </div>
-              <div class="summary-item">
-                <i class="fas fa-money-bill-wave"></i>
-                <p>{{ translations['Total Interest Paid'] }}</p>
-                <strong
-                  >{{ resumen[translations['Total Interest Paid']] }}</strong
-                >
-              </div>
-              <div class="summary-item">
-                <i class="fas fa-piggy-bank"></i>
-                <p>{{ translations['Total Interest Saved'] }}</p>
-                <strong
-                  >{{ resumen[translations['Total Interest Saved']] }}</strong
-                >
-              </div>
-              <div class="summary-item">
-                <i class="fas fa-chart-line"></i>
-                <p>{{ translations['Initial Daily Interest'] }}</p>
-                <strong
-                  >{{ resumen[translations['Initial Daily Interest']] }}</strong
-                >
-              </div>
-              <div class="summary-item">
-                <i class="fas fa-chart-line"></i>
-                <p>{{ translations['Final Daily Interest'] }}</p>
-                <strong
-                  >{{ resumen[translations['Final Daily Interest']] }}</strong
-                >
+        <div id="report-root">
+          <div id="results" class="results-container {% if not resumen %}hidden{% endif %}">
+            {% if resumen %}
+            <div class="summary">
+              <h2>Final Summary</h2>
+              <p id="summary-text"></p>
+              <div class="summary-grid">
+                <div class="summary-item">
+                  <i class="fas fa-clock"></i>
+                  <p>{{ translations['Total Time'] }}</p>
+                  <strong>{{ resumen[translations['Total Time']] }}</strong>
+                </div>
+                <div class="summary-item">
+                  <i class="fas fa-hand-holding-usd"></i>
+                  <p>{{ translations['Original Interest Without Additional Payments'] }}</p>
+                  <strong>{{ resumen[translations['Original Interest Without Additional Payments']] }}</strong>
+                </div>
+                <div class="summary-item">
+                  <i class="fas fa-money-bill-wave"></i>
+                  <p>{{ translations['Total Interest Paid'] }}</p>
+                  <strong>{{ resumen[translations['Total Interest Paid']] }}</strong>
+                </div>
+                <div class="summary-item">
+                  <i class="fas fa-piggy-bank"></i>
+                  <p>{{ translations['Total Interest Saved'] }}</p>
+                  <strong>{{ resumen[translations['Total Interest Saved']] }}</strong>
+                </div>
+                <div class="summary-item">
+                  <i class="fas fa-chart-line"></i>
+                  <p>{{ translations['Initial Daily Interest'] }}</p>
+                  <strong>{{ resumen[translations['Initial Daily Interest']] }}</strong>
+                </div>
+                <div class="summary-item">
+                  <i class="fas fa-chart-line"></i>
+                  <p>{{ translations['Final Daily Interest'] }}</p>
+                  <strong>{{ resumen[translations['Final Daily Interest']] }}</strong>
+                </div>
               </div>
             </div>
+            {% endif %}
+            {% if tables %}
+            <div class="payment-details">
+              <h2>{{ translations['Monthly Payment Details'] }}</h2>
+              <div class="table-responsive">{{ tables[0]|safe }}</div>
+            </div>
+            <div class="button-group" style="justify-content: flex-start; margin-top: 20px;">
+              <button type="button" class="btn-download" onclick="downloadReportPDF()">
+                <i class="fas fa-file-download"></i> Download PDF
+              </button>
+            </div>
+            {% endif %}
           </div>
-          {% endif %} {% if tables %}
-          <div class="payment-details">
-            <h2>{{ translations['Monthly Payment Details'] }}</h2>
-            <div class="table-responsive">{{ tables[0]|safe }}</div>
-          </div>
-          {% endif %}
         </div>
       </main>
     </div>
@@ -217,18 +172,8 @@
         </div>
         <div class="footer-section social">
           <h3>Follow Me</h3>
-          <a
-            href="https://www.linkedin.com/in/jfmarcenaroa/"
-            class="social-icon"
-            target="_blank"
-            ><i class="fab fa-linkedin"></i
-          ></a>
-          <a
-            href="https://github.com/jf8989?tab=repositories"
-            class="social-icon"
-            target="_blank"
-            ><i class="fab fa-github"></i
-          ></a>
+          <a href="https://www.linkedin.com/in/jfmarcenaroa/" class="social-icon" target="_blank"><i class="fab fa-linkedin"></i></a>
+          <a href="https://github.com/jf8989?tab=repositories" class="social-icon" target="_blank"><i class="fab fa-github"></i></a>
         </div>
       </div>
       <div class="footer-bottom">

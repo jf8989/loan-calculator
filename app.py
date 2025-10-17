@@ -101,6 +101,9 @@ def calcular_prestamo(principal,
     # ---- Actual payment used for the live schedule ----
     # If the user typed a fixed payment, use it. Otherwise, use the base.
     actual_payment = user_fixed_payment if user_fixed_payment > 0 else base_payment
+    
+    # Are we using the computed base payment with no extras?
+    used_base_and_no_extra = (user_fixed_payment <= 1e-9 and extra_payment <= 1e-9)
 
     # Negative amortization check (only meaningful if r > 0)
     if r_month > 0 and actual_payment <= L * r_month + 1e-9:
@@ -125,6 +128,21 @@ def calcular_prestamo(principal,
         month += 1
         interest_m = balance * r_month
         payment_total = actual_payment + extra_payment
+        
+        # If using base payment with no extras, force exact payoff at month n
+        if used_base_and_no_extra and month == n:
+            principal_m = balance
+            payment_total = interest_m + principal_m
+            balance = 0.0
+            total_interest_paid += interest_m
+            schedule_rows.append((
+                month,
+                f"${payment_total:,.2f}",
+                f"${interest_m:,.2f}",
+                f"${principal_m:,.2f}",
+                f"${balance:,.2f}",
+            ))
+            break
 
         # Principal for this month
         principal_m = payment_total - interest_m
