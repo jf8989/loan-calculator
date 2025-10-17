@@ -1,16 +1,29 @@
+// static/scripts.js
+
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("loanForm");
   const inputs = form.querySelectorAll('input[type="text"]');
   const resultsContainer = document.getElementById("results");
 
-  // Form submission handler
+  // Ensure each form-group has a persistent error placeholder to avoid reflow
+  document.querySelectorAll(".form-group").forEach((group) => {
+    let err = group.querySelector(".error-message");
+    if (!err) {
+      err = document.createElement("span");
+      err.className = "error-message";
+      err.setAttribute("aria-live", "polite");
+      group.appendChild(err);
+    }
+  });
+
+  // Form submission handler (simple client validation)
   form.addEventListener("submit", function (event) {
     let isValid = true;
 
     inputs.forEach((input) => {
       if (input.value.trim() === "") {
         isValid = false;
-        showError(input, "Este campo es requerido");
+        showError(input, getRequiredMessage());
       } else {
         hideError(input);
       }
@@ -18,12 +31,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!isValid) {
       event.preventDefault();
-    } else {
-      // Animate results container
+      return;
+    }
+
+    // Fade results container for a nicer transition without layout jump
+    if (resultsContainer) {
       resultsContainer.style.opacity = "0";
       setTimeout(() => {
         resultsContainer.style.opacity = "1";
-      }, 300);
+      }, 200);
     }
   });
 
@@ -36,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
     input.addEventListener("blur", function () {
       this.parentElement.classList.remove("focused");
       if (this.value.trim() === "") {
-        showError(this, "Este campo es requerido");
+        showError(this, getRequiredMessage());
       } else {
         hideError(this);
       }
@@ -48,29 +64,34 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Currency formatting
-  const currencyInputs = [
-    "principal",
-    "pago_mensual_fijo",
-    "pago_mensual_adicional",
-  ];
+  const currencyInputs = ["principal", "pago_mensual_fijo", "pago_mensual_adicional"];
   currencyInputs.forEach((id) => {
-    document.getElementById(id).addEventListener("blur", function () {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("blur", function () {
       formatCurrency(this);
     });
   });
 
   // Percentage formatting
-  document.getElementById("tasa_anual").addEventListener("blur", function () {
-    formatPercentage(this);
-  });
+  const aprInput = document.getElementById("tasa_anual");
+  if (aprInput) {
+    aprInput.addEventListener("blur", function () {
+      formatPercentage(this);
+    });
+  }
 
-  // Plazo input validation
-  const plazoInputs = ["plazo_anios", "plazo_meses"];
-  plazoInputs.forEach((id) => {
-    document.getElementById(id).addEventListener("input", function () {
+  // Plazo input validation (numbers only)
+  ["plazo_anios", "plazo_meses"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", function () {
       this.value = this.value.replace(/\D/g, "");
     });
   });
+
+  // Masks for better UX (kept)
+  setupInputMasks();
 });
 
 function resetForm() {
@@ -85,7 +106,7 @@ function resetForm() {
     input.style.backgroundColor = "#fff9c4";
     setTimeout(() => {
       input.style.backgroundColor = "white";
-    }, 500);
+    }, 300);
   });
 }
 
@@ -109,23 +130,32 @@ function formatCurrency(input) {
   // Parse the value and format it
   let numValue = parseFloat(value);
   if (!isNaN(numValue)) {
-    const formatter = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    input.value = formatter.format(numValue);
+    const formatted =
+      "$" + numValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    input.value = formatted;
   } else {
     input.value = "";
   }
 }
 
 function formatPercentage(input) {
-  let value = parseFloat(input.value.replace(/[^\d.]/g, ""));
-  if (!isNaN(value)) {
-    input.value = value.toFixed(2) + "%";
+  let raw = input.value.replace(/[^\d.]/g, "");
+  if (raw === "") {
+    input.value = "";
+    return;
   }
+  const parts = raw.split(".");
+  if (parts.length > 2) {
+    raw = parts[0] + "." + parts.slice(1).join("");
+  }
+  let value = parseFloat(raw);
+  if (isNaN(value)) {
+    input.value = "";
+    return;
+  }
+  // Cap to two decimals
+  value = Math.round(value * 100) / 100;
+  input.value = value.toFixed(2) + "%";
 }
 
 function showError(input, message) {
@@ -133,11 +163,7 @@ function showError(input, message) {
   const errorElement = input.parentElement.querySelector(".error-message");
   if (errorElement) {
     errorElement.textContent = message;
-  } else {
-    const newErrorElement = document.createElement("span");
-    newErrorElement.className = "error-message";
-    newErrorElement.textContent = message;
-    input.parentElement.appendChild(newErrorElement);
+    errorElement.style.display = "block"; // don’t insert/remove → no layout jump
   }
 }
 
@@ -145,22 +171,23 @@ function hideError(input) {
   input.classList.remove("error");
   const errorElement = input.parentElement.querySelector(".error-message");
   if (errorElement) {
-    errorElement.remove();
+    errorElement.textContent = "";
+    errorElement.style.display = "none";
   }
 }
 
-function updateSummaryText(
-  principal,
-  tasaAnual,
-  pagoMensualFijo,
-  pagoMensualAdicional
-) {
+function updateSummaryText(principal, tasaAnual, pagoMensualFijo, pagoMensualAdicional) {
   const summaryText = document.getElementById("summary-text");
+  if (!summaryText) return;
   const currentDate = new Date().toLocaleDateString("es-ES");
-  summaryText.textContent = `Para pagar un préstamo cuyo principal a la fecha actual, ${currentDate}, con una tasa de interés del ${tasaAnual}% anual, pagando de manera fija $${pagoMensualFijo} al mes y aplicando un pago adicional mensual de $${pagoMensualAdicional}:`;
+  summaryText.textContent =
+    `Para pagar un préstamo cuyo principal a la fecha actual, ${currentDate}, ` +
+    `con una tasa de interés del ${tasaAnual}% anual, pagando de manera fija ` +
+    `$${pagoMensualFijo} al mes y aplicando un pago adicional mensual de ` +
+    `$${pagoMensualAdicional}:`;
 }
 
-// Add smooth scrolling to results
+// Smooth scroll helper (unused here; kept for future)
 function scrollToResults() {
   const resultsElement = document.getElementById("results");
   if (resultsElement) {
@@ -168,64 +195,51 @@ function scrollToResults() {
   }
 }
 
-// Add input masking for better user experience
+// Input masks (kept, but with small safety tweaks)
 function setupInputMasks() {
-  const currencyInputs = [
-    "principal",
-    "pago_mensual_fijo",
-    "pago_mensual_adicional",
-  ];
-  currencyInputs.forEach((id) => {
+  const currencyIds = ["principal", "pago_mensual_fijo", "pago_mensual_adicional"];
+  currencyIds.forEach((id) => {
     const input = document.getElementById(id);
+    if (!input) return;
+
     input.addEventListener("input", function (e) {
       let value = e.target.value.replace(/[^\d.]/g, "");
-
-      // Allow only one decimal point
       const decimalIndex = value.indexOf(".");
       if (decimalIndex !== -1) {
         const integerPart = value.slice(0, decimalIndex);
         let decimalPart = value.slice(decimalIndex + 1);
-        // Limit decimal part to two digits
         decimalPart = decimalPart.slice(0, 2);
         value = integerPart + "." + decimalPart;
       }
-
-      // Format the number
       const parts = value.split(".");
       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-      e.target.value = "$" + parts.join(".");
+      e.target.value = (parts.join(".") ? "$" : "") + parts.join(".");
     });
 
-    // Ensure correct formatting on blur
     input.addEventListener("blur", function () {
-      if (input.value) {
-        const numValue = parseFloat(input.value.replace(/[^\d.]/g, ""));
-        if (!isNaN(numValue)) {
-          input.value =
-            "$" + numValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
+      if (!input.value) return;
+      const numValue = parseFloat(input.value.replace(/[^\d.]/g, ""));
+      if (!isNaN(numValue)) {
+        input.value = "$" + numValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       }
     });
   });
 
-  // Add percentage formatting
-  const percentInput = document.getElementById("tasa_anual");  
-  percentInput.addEventListener("input", function (e) {
-    let value = e.target.value.replace(/[^\d.]/g, "");
-    if (value) {
+  const percentInput = document.getElementById("tasa_anual");
+  if (percentInput) {
+    percentInput.addEventListener("input", function (e) {
+      let value = e.target.value.replace(/[^\d.]/g, "");
+      if (!value) { e.target.value = ""; return; }
       const parts = value.split(".");
-      if (parts[0].length > 2) {
-        parts[0] = parts[0].slice(0, 2);
-      }
-      if (parts[1] && parts[1].length > 2) {
-        parts[1] = parts[1].slice(0, 2);
-      }
+      if (parts[1] && parts[1].length > 2) parts[1] = parts[1].slice(0, 2);
       value = parts.join(".");
       e.target.value = value + "%";
-    }
-  });
+    });
+  }
 }
 
-// Call setup functions
-setupInputMasks();
+function getRequiredMessage() {
+  // Simple bilingual fallback based on page lang
+  const lang = document.documentElement.lang || "en";
+  return lang.startsWith("es") ? "Este campo es requerido" : "This field is required";
+}

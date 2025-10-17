@@ -25,13 +25,14 @@
       </header>
 
       <main>
-        <form id="loanForm" method="POST">
+        <form id="loanForm" method="POST" novalidate autocomplete="off">
           <div class="form-group tooltip">
             <label for="principal">Current Principal:</label>
             <input
               type="text"
               id="principal"
               name="principal"
+              inputmode="decimal"
               value="{{ form_data.principal }}"
               required
             />
@@ -47,6 +48,7 @@
               type="text"
               id="tasa_anual"
               name="tasa_anual"
+              inputmode="decimal"
               value="{{ form_data.tasa_anual }}"
               required
             />
@@ -62,6 +64,7 @@
               type="text"
               id="pago_mensual_fijo"
               name="pago_mensual_fijo"
+              inputmode="decimal"
               value="{{ form_data.pago_mensual_fijo }}"
               required
             />
@@ -79,6 +82,7 @@
               type="text"
               id="pago_mensual_adicional"
               name="pago_mensual_adicional"
+              inputmode="decimal"
               value="{{ form_data.pago_mensual_adicional }}"
               required
             />
@@ -95,6 +99,7 @@
                 type="text"
                 id="plazo_anios"
                 name="plazo_anios"
+                inputmode="numeric"
                 value="{{ form_data.plazo_anios }}"
                 required
                 placeholder="Years"
@@ -103,6 +108,7 @@
                 type="text"
                 id="plazo_meses"
                 name="plazo_meses"
+                inputmode="numeric"
                 value="{{ form_data.plazo_meses }}"
                 required
                 placeholder="Months"
@@ -123,7 +129,12 @@
         </form>
 
         {% if error %}
-        <div class="error-message">{{ error }}</div>
+        <div
+          class="error-message"
+          style="position: static; display: block; margin-top: 10px"
+        >
+          {{ error }}
+        </div>
         {% endif %}
 
         <div
@@ -142,28 +153,42 @@
               </div>
               <div class="summary-item">
                 <i class="fas fa-hand-holding-usd"></i>
-                <p>{{ translations['Original Interest Without Additional Payments'] }}</p>
-                <strong>{{ resumen[translations['Original Interest Without Additional Payments']] }}</strong>
+                <p>
+                  {{ translations['Original Interest Without Additional
+                  Payments'] }}
+                </p>
+                <strong
+                  >{{ resumen[translations['Original Interest Without Additional
+                  Payments']] }}</strong
+                >
               </div>
               <div class="summary-item">
                 <i class="fas fa-money-bill-wave"></i>
                 <p>{{ translations['Total Interest Paid'] }}</p>
-                <strong>{{ resumen[translations['Total Interest Paid']] }}</strong>
+                <strong
+                  >{{ resumen[translations['Total Interest Paid']] }}</strong
+                >
               </div>
               <div class="summary-item">
                 <i class="fas fa-piggy-bank"></i>
                 <p>{{ translations['Total Interest Saved'] }}</p>
-                <strong>{{ resumen[translations['Total Interest Saved']] }}</strong>
+                <strong
+                  >{{ resumen[translations['Total Interest Saved']] }}</strong
+                >
               </div>
               <div class="summary-item">
                 <i class="fas fa-chart-line"></i>
                 <p>{{ translations['Initial Daily Interest'] }}</p>
-                <strong>{{ resumen[translations['Initial Daily Interest']] }}</strong>
+                <strong
+                  >{{ resumen[translations['Initial Daily Interest']] }}</strong
+                >
               </div>
               <div class="summary-item">
                 <i class="fas fa-chart-line"></i>
                 <p>{{ translations['Final Daily Interest'] }}</p>
-                <strong>{{ resumen[translations['Final Daily Interest']] }}</strong>
+                <strong
+                  >{{ resumen[translations['Final Daily Interest']] }}</strong
+                >
               </div>
             </div>
           </div>
