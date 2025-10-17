@@ -126,7 +126,7 @@ input[type="text"] {
     padding: 12px 15px 12px 40px;
     border: 2px solid var(--border-color);
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 16px; /* mobile: prevents iOS zoom */
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     background-color: var(--input-bg);
     box-shadow: var(--input-shadow);
@@ -167,6 +167,7 @@ input[type="text"]:focus-visible {
     gap: 15px;
     justify-content: flex-end;
     margin-top: 30px;
+    flex-wrap: wrap; /* mobile: wrap nicely */
 }
 
 button {
@@ -505,17 +506,17 @@ body.theme-dark .footer-bottom { background-color: #0f172a; }
     * { transition: none !important; animation: none !important; }
 }
 
-/* Responsive */
+/* ========= Mobile tweaks ========= */
 @media (max-width: 768px) {
     .container { padding: 20px 10px; }
-    form, .results-container { padding: 30px 20px; }
+    form, .results-container { padding: 24px 16px; } /* a hair tighter */
     .loan-summary { font-size: 1em; padding: 15px; }
-    .summary h2 { font-size: 1.8em; }
+    .summary h2 { font-size: 1.6em; }
     .summary-grid { grid-template-columns: 1fr; }
     .summary-item { padding: 15px; }
     .summary-item i { font-size: 2em; }
-    .summary-item strong { font-size: 1.2em; }
-    .button-group { flex-direction: column; }
+    .summary-item strong { font-size: 1.15em; }
+    .button-group { flex-direction: column; align-items: stretch; }
     button { width: 100%; }
     .plazo-group .plazo-inputs { flex-direction: column; gap: 10px; }
     .footer-content { flex-direction: column; align-items: center; }
@@ -524,14 +525,16 @@ body.theme-dark .footer-bottom { background-color: #0f172a; }
 }
 
 @media (max-width: 480px) {
-    h1 { font-size: 2em; }
-    h2 { font-size: 1.5em; }
+    h1 { font-size: 1.9em; }
+    h2 { font-size: 1.4em; }
     input[type="text"] { font-size: 16px; } /* prevent iOS zoom */
-    .loan-summary { font-size: 0.9em; padding: 12px; }
-    .summary h2 { font-size: 1.6em; }
+    .loan-summary { font-size: 0.95em; padding: 12px; }
+    .summary h2 { font-size: 1.5em; }
     .summary-item { padding: 12px; }
     .summary-item i { font-size: 1.8em; }
-    .summary-item strong { font-size: 1.1em; }
+    .summary-item strong { font-size: 1.05em; }
+
+    /* Table becomes cards for readability */
     table, thead, tbody, th, td, tr { display: block; }
     thead tr { position: absolute; top: -9999px; left: -9999px; }
     tr { border: 1px solid var(--border-color); margin-bottom: 10px; }
@@ -547,9 +550,37 @@ body.theme-dark .footer-bottom { background-color: #0f172a; }
     }
 }
 
-/* Print tweaks (used by html2pdf & print) */
+/* ========= Print tweaks (reliable PDF via window.print) ========= */
 @media print {
-    body { background: #fff; }
-    .site-footer, nav, .button-group, .theme-toggle { display: none !important; }
-    .results-container { box-shadow: none; border: none; }
+    @page { margin: 12mm; } /* adjust if you want tighter margins */
+
+    /* exact color where supported */
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* Hide non-report stuff for PDF cleanliness */
+    nav, header, .site-footer, .footer-bottom, .button-group, .theme-toggle, #loading-overlay { 
+        display: none !important; 
+    }
+
+    /* Ensure report starts at top and title doesn't get pushed to later pages */
+    #report-root { 
+        break-before: avoid;
+        page-break-before: avoid;
+        margin-top: 0 !important;
+    }
+
+    .print-header { 
+        display: block !important; 
+        margin-bottom: 8px; 
+    }
+
+    /* Avoid breaking key blocks across pages */
+    h1, h2, .summary, .payment-details, table, tr, .summary-grid, .summary-item {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* Tighten spacing to reduce orphan page breaks */
+    .container { padding: 0 !important; }
+    .results-container { box-shadow: none; border: none; margin-top: 0 !important; padding: 0 !important; }
 }
